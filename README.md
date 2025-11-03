@@ -47,6 +47,12 @@ Aplikasi web **manajemen keuangan pribadi** berbasis **Laravel** dengan fitur le
 - **Modern Cards**: Design bersih dengan Tailwind CSS
 - **Interactive Elements**: Smooth transitions dan micro-interactions
 
+### 📝 Logging & Monitoring
+- **Daily Logging**: Otomatis buat log file per hari
+- **Activity Tracking**: Log transaksi, login, dan error
+- **7 Days Retention**: Log disimpan 7 hari terakhir
+- **Simple Format**: Format log yang mudah dibaca
+
 ---
 
 ## 🔒 Kompatibilitas PHP
@@ -361,6 +367,21 @@ Ensure these PHP extensions are enabled:
 - `php-mysql` (or `php-pgsql`)
 - `php-tokenizer`
 - `php-xml`
+
+#### 7. Logging Issues
+```bash
+# Check log directory permissions
+ls -la storage/logs/
+
+# Create log directory if missing
+mkdir -p storage/logs
+
+# Set proper permissions
+chmod 755 storage/logs
+
+# View today's log
+tail -f storage/logs/laravel-$(date +%Y-%m-%d).log
+```
 
 ---
 

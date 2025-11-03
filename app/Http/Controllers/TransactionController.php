@@ -8,6 +8,7 @@ use App\Models\Account;
 use App\Models\Category;
 use App\Models\PaylaterTransaction;
 use App\Models\Installment;
+use App\Helpers\LogHelper;
 use Carbon\Carbon;
 
 class TransactionController extends Controller
@@ -130,7 +131,10 @@ class TransactionController extends Controller
         }
 
         // Regular income/expense transaction
-        Transaction::create($data);
+        $transaction = Transaction::create($data);
+
+        // Log transaction
+        LogHelper::transaction('created', $transaction);
 
         $typeName = $request->type === 'income' ? 'Pemasukan' : 'Pengeluaran';
         return redirect()->route('transactions.index')
@@ -257,6 +261,9 @@ class TransactionController extends Controller
 
         $transaction->update($data);
 
+        // Log transaction update
+        LogHelper::transaction('updated', $transaction);
+
         return redirect()->route('transactions.index')
             ->with('success', 'Transaksi berhasil diperbarui!');
     }
@@ -268,6 +275,9 @@ class TransactionController extends Controller
         }
 
         $transaction->delete();
+
+        // Log transaction deletion
+        LogHelper::transaction('deleted', $transaction);
 
         return redirect()->route('transactions.index')
             ->with('success', 'Transaksi berhasil dihapus!');

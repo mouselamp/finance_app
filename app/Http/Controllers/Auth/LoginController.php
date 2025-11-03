@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Providers\RouteServiceProvider;
 use Illuminate\Foundation\Auth\AuthenticatesUsers;
+use App\Helpers\LogHelper;
 
 class LoginController extends Controller
 {
@@ -36,5 +37,22 @@ class LoginController extends Controller
     public function __construct()
     {
         $this->middleware('guest')->except('logout');
+    }
+
+    /**
+     * The user has been authenticated.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  mixed  $user
+     * @return mixed
+     */
+    protected function authenticated($request, $user)
+    {
+        LogHelper::log('AUTH', 'User logged in', [
+            'email' => $user->email,
+            'name' => $user->name,
+        ]);
+
+        return redirect()->intended($this->redirectPath());
     }
 }
