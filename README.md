@@ -81,8 +81,8 @@ Aplikasi web **manajemen keuangan pribadi** berbasis **Laravel** dengan fitur le
 
 ### 1. Clone Repository
 ```bash
-git clone https://github.com/username/financial-management-app.git
-cd financial-management-app
+git clone https://github.com/mouselamp/finance_app.git
+cd finance_app
 ```
 
 ### 2. Install Dependencies
