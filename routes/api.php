@@ -1,0 +1,58 @@
+<?php
+
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Route;
+
+/*
+|--------------------------------------------------------------------------
+| API Routes
+|--------------------------------------------------------------------------
+|
+| Here is where you can register API routes for your application. These
+| routes are loaded by the RouteServiceProvider within a group which
+| is assigned the "api" middleware group. Enjoy building your API!
+|
+*/
+
+Route::middleware('auth:api')->get('/user', function (Request $request) {
+    return $request->user();
+});
+
+// Authentication Routes
+Route::prefix('auth')->group(function () {
+    Route::post('login', [App\Http\Controllers\Api\AuthController::class, 'login'])->name('api.auth.login');
+    Route::post('logout', [App\Http\Controllers\Api\AuthController::class, 'logout'])->name('api.auth.logout');
+    Route::get('me', [App\Http\Controllers\Api\AuthController::class, 'me'])->name('api.auth.me');
+    Route::post('refresh', [App\Http\Controllers\Api\AuthController::class, 'refresh'])->name('api.auth.refresh');
+});
+
+// Protected API Routes (require authentication)
+Route::middleware('auth:api')->group(function () {
+    // API Routes for Transactions
+    Route::prefix('transactions')->group(function () {
+        Route::get('/', [App\Http\Controllers\Api\ApiTransactionController::class, 'index'])->name('api.transactions.index');
+        Route::post('/', [App\Http\Controllers\Api\ApiTransactionController::class, 'store'])->name('api.transactions.store');
+        Route::get('/statistics', [App\Http\Controllers\Api\ApiTransactionController::class, 'statistics'])->name('api.transactions.statistics');
+        Route::get('/{id}', [App\Http\Controllers\Api\ApiTransactionController::class, 'show'])->name('api.transactions.show');
+        Route::put('/{id}', [App\Http\Controllers\Api\ApiTransactionController::class, 'update'])->name('api.transactions.update');
+        Route::delete('/{id}', [App\Http\Controllers\Api\ApiTransactionController::class, 'destroy'])->name('api.transactions.destroy');
+    });
+
+    // API Routes for Accounts
+    Route::prefix('accounts')->group(function () {
+        Route::get('/', [App\Http\Controllers\Api\ApiAccountController::class, 'index'])->name('api.accounts.index');
+        Route::post('/', [App\Http\Controllers\Api\ApiAccountController::class, 'store'])->name('api.accounts.store');
+        Route::get('/{id}', [App\Http\Controllers\Api\ApiAccountController::class, 'show'])->name('api.accounts.show');
+        Route::put('/{id}', [App\Http\Controllers\Api\ApiAccountController::class, 'update'])->name('api.accounts.update');
+        Route::delete('/{id}', [App\Http\Controllers\Api\ApiAccountController::class, 'destroy'])->name('api.accounts.destroy');
+    });
+
+    // API Routes for Categories
+    Route::prefix('categories')->group(function () {
+        Route::get('/', [App\Http\Controllers\Api\ApiCategoryController::class, 'index'])->name('api.categories.index');
+        Route::post('/', [App\Http\Controllers\Api\ApiCategoryController::class, 'store'])->name('api.categories.store');
+        Route::get('/{id}', [App\Http\Controllers\Api\ApiCategoryController::class, 'show'])->name('api.categories.show');
+        Route::put('/{id}', [App\Http\Controllers\Api\ApiCategoryController::class, 'update'])->name('api.categories.update');
+        Route::delete('/{id}', [App\Http\Controllers\Api\ApiCategoryController::class, 'destroy'])->name('api.categories.destroy');
+    });
+});
