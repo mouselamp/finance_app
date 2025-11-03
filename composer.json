@@ -1,14 +1,18 @@
 {
-    "name": "laravel/laravel",
+    "name": "mouselamp/finance_app",
     "type": "project",
-    "description": "The Laravel Framework.",
+    "description": "Personal Finance Management App - Track income, expenses, transfers, and paylater installments.",
     "keywords": [
-        "framework",
-        "laravel"
+        "finance",
+        "money-management",
+        "laravel",
+        "paylater",
+        "transactions",
+        "budgeting"
     ],
     "license": "MIT",
     "require": {
-        "php": "^7.2.5|^8.0",
+        "php": "^7.2.34|^8.0",
         "fideloper/proxy": "^4.4",
         "fruitcake/laravel-cors": "^2.0",
         "guzzlehttp/guzzle": "^6.3.1|^7.0.1",
@@ -16,7 +20,7 @@
         "laravel/tinker": "^2.5",
         "laravel/ui": "^2.4",
         "maatwebsite/excel": "^3.1",
-        "nesbot/carbon": "^2.73"
+        "nesbot/carbon": "^2.53|^2.73"
     },
     "require-dev": {
         "facade/ignition": "^2.0",
@@ -28,7 +32,13 @@
     "config": {
         "optimize-autoloader": true,
         "preferred-install": "dist",
-        "sort-packages": true
+        "sort-packages": true,
+        "platform": {
+            "php": "7.2.34"
+        },
+        "allow-plugins": {
+            "composer/package-versions-deprecated": true
+        }
     },
     "extra": {
         "laravel": {
@@ -62,5 +72,9 @@
         "post-create-project-cmd": [
             "@php artisan key:generate --ansi"
         ]
+    },
+    "support": {
+        "issues": "https://github.com/mouselamp/finance_app/issues",
+        "source": "https://github.com/mouselamp/finance_app"
     }
 }

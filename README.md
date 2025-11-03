@@ -49,11 +49,30 @@ Aplikasi web **manajemen keuangan pribadi** berbasis **Laravel** dengan fitur le
 
 ---
 
+## 🔒 Kompatibilitas PHP
+
+### ✅ PHP Version Support
+- **PHP 7.2.34** - Minimum requirement
+- **PHP 7.3.x** - Fully supported
+- **PHP 7.4.x** - Fully supported
+- **PHP 8.x** - Fully compatible
+
+### 🚫 Features Not Used (for PHP 7.2 compatibility)
+- Arrow functions (`fn()`)
+- Typed properties (`public string $name`)
+- Match expressions (`match()`)
+- Null coalescing assignment (`??=`)
+- Spread operator in arrays (`...$array`)
+
+**Note**: Aplikasi sengaja tidak menggunakan fitur PHP 7.4+ untuk menjaga kompatibilitas maksimal dengan PHP 7.2.34.
+
+---
+
 ## 🛠️ Teknologi
 
 ### Backend
-- **PHP 7.3+**
-- **Laravel 8.x**
+- **PHP 7.2+**
+- **Laravel 7.x**
 - **MySQL/MariaDB**
 - **RESTful API**
 - **Eloquent ORM**
@@ -69,7 +88,7 @@ Aplikasi web **manajemen keuangan pribadi** berbasis **Laravel** dengan fitur le
 
 ## 📋 Requirements
 
-- PHP 7.3 atau higher
+- PHP 7.2.34 atau higher
 - Composer
 - MySQL/MariaDB
 - Web server (Apache/Nginx)
@@ -118,14 +137,23 @@ php artisan migrate
 php artisan storage:link
 ```
 
-### 7. Build Assets
+### 7. Verify PHP Compatibility
+```bash
+# Check platform requirements
+composer check-platform-reqs
+
+# Verify Laravel compatibility
+php artisan about
+```
+
+### 8. Build Assets
 ```bash
 npm run dev
 # atau untuk production
 npm run build
 ```
 
-### 8. Start Application
+### 9. Start Application
 ```bash
 php artisan serve
 # atau akses langsung ke folder /public
@@ -297,9 +325,62 @@ npm run build
 php artisan storage:link
 ```
 
+#### 4. PHP Version Issues (PHP 7.2.34)
+```bash
+# Check PHP version
+php -v
+
+# Check Laravel requirements
+php artisan about
+
+# Clear caches
+php artisan cache:clear
+php artisan config:clear
+php artisan route:clear
+php artisan view:clear
+
+# Check Composer compatibility
+composer check-platform-reqs
+```
+
+#### 5. Memory Limit (PHP 7.2)
+```bash
+# Increase memory limit if needed
+php -d memory_limit=512M artisan serve
+# or set in php.ini:
+memory_limit = 512M
+```
+
+#### 6. Extension Requirements (PHP 7.2)
+Ensure these PHP extensions are enabled:
+- `php-cli`
+- `php-json`
+- `php-mbstring`
+- `php-openssl`
+- `php-pdo`
+- `php-mysql` (or `php-pgsql`)
+- `php-tokenizer`
+- `php-xml`
+
 ---
 
 ## 📝 Development
+
+### Composer Configuration
+```json
+{
+  "name": "mouselamp/finance_app",
+  "require": {
+    "php": "^7.2.34|^8.0",
+    "laravel/framework": "^7.29"
+  },
+  "config": {
+    "platform": {
+      "php": "7.2.34"
+    }
+  }
+}
+```
 
 ### Database Migrations
 ```bash
