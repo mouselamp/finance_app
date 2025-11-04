@@ -32,6 +32,22 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="FinanceApp">
 
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="{{ asset('manifest.json') }}">
+
+    <!-- Favicons -->
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('icons/apple-touch-icon.png') }}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('icons/favicon-32x32.png') }}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('icons/favicon-16x16.png') }}">
+    <link rel="icon" href="{{ asset('icons/favicon.ico') }}">
+    <link rel="manifest" href="{{ asset('manifest.json') }}">
+    <link rel="mask-icon" href="{{ asset('icons/safari-pinned-tab.svg') }}" color="#2563eb">
+    <meta name="msapplication-TileColor" content="#2563eb">
+    <meta name="theme-color" content="#2563eb">
+
+    <!-- PWA Styles -->
+    <link rel="stylesheet" href="{{ asset('css/pwa.css') }}">
+
     <!-- Custom Tailwind Config -->
     <script>
         tailwind.config = {
@@ -165,6 +181,19 @@
         </div>
     </div>
 
+    <!-- Offline Indicator -->
+    <div class="offline-indicator">
+        <i class="fas fa-wifi mr-2"></i> Anda sedang offline
+    </div>
+
+    <!-- PWA Install Prompt -->
+    <div id="pwaInstallPrompt" class="pwa-install-prompt">
+        <i class="fas fa-download"></i>
+        <span>Install aplikasi ini di perangkat Anda</span>
+        <button id="installBtn" class="install-btn">Install</button>
+        <button id="dismissBtn" class="dismiss-btn">&times;</button>
+    </div>
+
     <!-- Alpine.js Event Listener for Sidebar Toggle -->
     <script>
         document.addEventListener('toggle-sidebar', function() {
@@ -179,9 +208,97 @@
         });
     </script>
 
-    
+  
     <!-- Include compiled JavaScript -->
     <script src="{{ asset('js/app.js') }}"></script>
+
+    <!-- PWA Service Worker Registration -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function() {
+                navigator.serviceWorker.register('{{ asset('sw.js') }}')
+                    .then(function(registration) {
+                        console.log('Service Worker registered successfully with scope:', registration.scope);
+
+                        // Check for updates
+                        registration.addEventListener('updatefound', function() {
+                            const newWorker = registration.installing;
+                            newWorker.addEventListener('statechange', function() {
+                                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                    // New content is available, show notification
+                                    if (confirm('Aplikasi telah diperbarui. Muat ulang halaman untuk mendapatkan versi terbaru?')) {
+                                        window.location.reload();
+                                    }
+                                }
+                            });
+                        });
+                    })
+                    .catch(function(error) {
+                        console.error('Service Worker registration failed:', error);
+                    });
+            });
+        }
+
+        // Handle online/offline status
+        window.addEventListener('online', function() {
+            console.log('App is online');
+            document.body.classList.remove('offline');
+        });
+
+        window.addEventListener('offline', function() {
+            console.log('App is offline');
+            document.body.classList.add('offline');
+        });
+
+        // Check initial online status
+        if (!navigator.onLine) {
+            document.body.classList.add('offline');
+        }
+
+        // PWA Install Prompt
+        let deferredPrompt;
+        const installPrompt = document.getElementById('pwaInstallPrompt');
+        const installBtn = document.getElementById('installBtn');
+        const dismissBtn = document.getElementById('dismissBtn');
+
+        window.addEventListener('beforeinstallprompt', function(e) {
+            console.log('beforeinstallprompt fired');
+            e.preventDefault();
+            deferredPrompt = e;
+
+            // Show install prompt after a delay
+            setTimeout(() => {
+                installPrompt.classList.add('show');
+            }, 3000);
+        });
+
+        installBtn.addEventListener('click', function() {
+            if (deferredPrompt) {
+                console.log('Installing PWA...');
+                deferredPrompt.prompt();
+
+                deferredPrompt.userChoice.then(function(choiceResult) {
+                    if (choiceResult.outcome === 'accepted') {
+                        console.log('User accepted the install prompt');
+                    } else {
+                        console.log('User dismissed the install prompt');
+                    }
+                    deferredPrompt = null;
+                    installPrompt.classList.remove('show');
+                });
+            }
+        });
+
+        dismissBtn.addEventListener('click', function() {
+            installPrompt.classList.remove('show');
+        });
+
+        // Hide install prompt if already installed
+        window.addEventListener('appinstalled', function() {
+            console.log('PWA was installed');
+            installPrompt.classList.remove('show');
+        });
+    </script>
 
     @stack('scripts')
 </body>
