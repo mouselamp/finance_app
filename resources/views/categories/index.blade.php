@@ -137,17 +137,22 @@ async function loadCategories() {
         document.getElementById('emptyState').classList.add('hidden');
         document.getElementById('categoryGrid').classList.add('hidden');
 
-        const response = await window.api.getCategories();
+        const response = await axios.get('{{ route("api.categories.index") }}', {
+            headers: {
+                'X-API-TOKEN': window.apiToken || '{{ Auth::user()->api_token }}'
+            }
+        });
 
-        if (response.success && response.data.grouped) {
-            const grouped = response.data.grouped;
+        if (response.data.success && response.data.data.grouped) {
+            const grouped = response.data.data.grouped;
             displayCategories(grouped);
             document.getElementById('categoryGrid').classList.remove('hidden');
         } else {
             document.getElementById('emptyState').classList.remove('hidden');
         }
     } catch (error) {
-        window.api.handleApiError(error, 'Memuat data kategori');
+        console.error('Error loading categories:', error);
+        showAlert('error', 'Gagal memuat data kategori');
     } finally {
         document.getElementById('loadingState').classList.add('hidden');
     }
@@ -263,13 +268,18 @@ function getCategoryIconData(name, type) {
 window.deleteCategory = async function(id, name) {
     if (confirm(`Yakin ingin menghapus kategori "${name}"?`)) {
         try {
-            const response = await window.api.deleteCategory(id);
-            if (response.success) {
-                window.api.handleApiSuccess(response, 'Kategori berhasil dihapus!');
+            const response = await axios.delete('{{ route("api.categories.destroy", ":id") }}'.replace(':id', id), {
+                headers: {
+                    'X-API-TOKEN': window.apiToken || '{{ Auth::user()->api_token }}'
+                }
+            });
+            if (response.data.success) {
+                showAlert('success', 'Kategori berhasil dihapus!');
                 loadCategories(); // Reload categories
             }
         } catch (error) {
-            window.api.handleApiError(error, 'Menghapus kategori');
+            console.error('Error deleting category:', error);
+            showAlert('error', 'Gagal menghapus kategori');
         }
     }
 };

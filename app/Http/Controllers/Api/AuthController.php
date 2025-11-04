@@ -64,7 +64,7 @@ class AuthController extends Controller
     public function logout(Request $request)
     {
         try {
-            $user = Auth::guard('api')->user();
+            $user = auth()->user();
 
             if (!$user) {
                 return response()->json([
@@ -95,7 +95,7 @@ class AuthController extends Controller
     public function me(Request $request)
     {
         try {
-            $user = Auth::guard('api')->user();
+            $user = auth()->user();
 
             if (!$user) {
                 return response()->json([
@@ -107,6 +107,8 @@ class AuthController extends Controller
             return response()->json([
                 'success' => true,
                 'data' => $user,
+                'api_token' => $user->api_token,
+                'has_api_token' => $user->hasApiToken(),
                 'message' => 'User details retrieved successfully'
             ]);
 

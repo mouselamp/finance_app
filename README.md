@@ -383,6 +383,27 @@ chmod 755 storage/logs
 tail -f storage/logs/laravel-$(date +%Y-%m-%d).log
 ```
 
+#### 8. API 401 Unauthorized (Server Deployment)
+```bash
+# Clear all caches
+php artisan cache:clear
+php artisan config:clear
+php artisan route:clear
+php artisan view:clear
+
+# Check session configuration
+grep SESSION_DRIVER .env
+
+# Set session domain for production
+SESSION_DOMAIN=yourdomain.com
+
+# Check file permissions
+chmod -R 755 storage bootstrap/cache
+
+# Regenerate application key
+php artisan key:generate
+```
+
 ---
 
 ## 📝 Development

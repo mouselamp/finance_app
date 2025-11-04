@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::middleware('auth:api')->get('/user', function (Request $request) {
+Route::middleware('auth.token')->get('/user', function (Request $request) {
     return $request->user();
 });
 
@@ -23,11 +23,10 @@ Route::prefix('auth')->group(function () {
     Route::post('login', [App\Http\Controllers\Api\AuthController::class, 'login'])->name('api.auth.login');
     Route::post('logout', [App\Http\Controllers\Api\AuthController::class, 'logout'])->name('api.auth.logout');
     Route::get('me', [App\Http\Controllers\Api\AuthController::class, 'me'])->name('api.auth.me');
-    Route::post('refresh', [App\Http\Controllers\Api\AuthController::class, 'refresh'])->name('api.auth.refresh');
 });
 
 // Protected API Routes (require authentication)
-Route::middleware('auth:api')->group(function () {
+Route::middleware('auth.token')->group(function () {
     // API Routes for Transactions
     Route::prefix('transactions')->group(function () {
         Route::get('/', [App\Http\Controllers\Api\ApiTransactionController::class, 'index'])->name('api.transactions.index');

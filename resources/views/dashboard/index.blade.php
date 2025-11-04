@@ -108,6 +108,57 @@
     </div>
 </div>
 
+<!-- API Token Section -->
+<div class="bg-white shadow rounded-lg mb-8">
+    <div class="px-4 py-5 sm:px-6 border-b border-gray-200">
+        <div class="flex items-center justify-between">
+            <h3 class="text-lg leading-6 font-medium text-gray-900">API Token</h3>
+            <button onclick="regenerateApiToken()" class="text-sm text-blue-600 hover:text-blue-500 font-medium">
+                <i class="fas fa-sync-alt mr-1"></i>
+                Regenerate Token
+            </button>
+        </div>
+    </div>
+    <div class="p-6">
+        <div class="space-y-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Your API Token</label>
+                <div class="relative">
+                    <input type="text"
+                           id="apiTokenDisplay"
+                           readonly
+                           value="Loading..."
+                           class="block w-full px-3 py-2 pr-10 border border-gray-300 rounded-md bg-gray-50 text-sm font-mono"
+                           placeholder="API token will appear here">
+                    <button onclick="copyApiToken()"
+                            class="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                            title="Copy token">
+                        <i class="fas fa-copy"></i>
+                    </button>
+                </div>
+                <p class="mt-1 text-xs text-gray-500">
+                    Use this token to authenticate API requests
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                <div class="bg-gray-50 rounded p-3">
+                    <h4 class="font-medium text-gray-900 mb-1">Bearer Token</h4>
+                    <code class="text-xs text-gray-600">Authorization: Bearer YOUR_TOKEN</code>
+                </div>
+                <div class="bg-gray-50 rounded p-3">
+                    <h4 class="font-medium text-gray-900 mb-1">Header Token</h4>
+                    <code class="text-xs text-gray-600">X-API-TOKEN: YOUR_TOKEN</code>
+                </div>
+                <div class="bg-gray-50 rounded p-3">
+                    <h4 class="font-medium text-gray-900 mb-1">CURL Example</h4>
+                    <code class="text-xs text-gray-600 break-all">curl -H "X-API-TOKEN: YOUR_TOKEN" ...</code>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
     <!-- Recent Transactions -->
     <div class="lg:col-span-2">
@@ -229,6 +280,7 @@
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     loadDashboardData();
+    loadApiToken();
 });
 
 // Helper functions
@@ -499,6 +551,70 @@ function displayAccounts(accounts) {
         `;
         container.appendChild(div);
     });
+}
+
+// API Token Functions
+async function loadApiToken() {
+    try {
+        const response = await axios.get('{{ route('api.auth.me') }}');
+        const apiToken = response.data.data.api_token;
+
+        if (apiToken) {
+            document.getElementById('apiTokenDisplay').value = apiToken;
+        } else {
+            document.getElementById('apiTokenDisplay').value = 'No API token found. Please regenerate.';
+        }
+    } catch (error) {
+        console.error('Failed to load API token:', error);
+        document.getElementById('apiTokenDisplay').value = 'Failed to load API token';
+    }
+}
+
+async function regenerateApiToken() {
+    if (!confirm('Are you sure you want to regenerate your API token? The old token will become invalid.')) {
+        return;
+    }
+
+    const button = event.target;
+    const originalText = button.innerHTML;
+    button.disabled = true;
+    button.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Generating...';
+
+    try {
+        // Generate new token by calling login again
+        const response = await axios.post('{{ route('api.auth.login') }}', {
+            email: '{{ auth()->user()->email }}',
+            password: 'DUMMY_PASSWORD' // This will be handled in backend
+        });
+
+        const newToken = response.data.data.token;
+        document.getElementById('apiTokenDisplay').value = newToken;
+        showAlert('success', 'API token regenerated successfully!');
+    } catch (error) {
+        console.error('Failed to regenerate API token:', error);
+        showAlert('error', 'Failed to regenerate API token: ' + (error.response?.data?.message || error.message));
+    } finally {
+        button.disabled = false;
+        button.innerHTML = originalText;
+    }
+}
+
+function copyApiToken() {
+    const tokenInput = document.getElementById('apiTokenDisplay');
+
+    if (tokenInput.value && tokenInput.value !== 'Loading...' && tokenInput.value !== 'No API token found.') {
+        tokenInput.select();
+        document.execCommand('copy');
+
+        // Show copy feedback
+        const originalValue = tokenInput.value;
+        tokenInput.value = 'Copied!';
+        setTimeout(() => {
+            tokenInput.value = originalValue;
+        }, 2000);
+
+        showAlert('success', 'API token copied to clipboard!');
+    }
 }
 </script>
 @endpush

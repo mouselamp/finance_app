@@ -49,11 +49,29 @@ class User extends Authenticatable
     }
 
     /**
+     * Regenerate API token
+     */
+    public function regenerateApiToken()
+    {
+        $this->api_token = Str::random(60);
+        $this->save();
+        return $this->api_token;
+    }
+
+    /**
      * Revoke API token
      */
     public function revokeApiToken()
     {
         $this->api_token = null;
         $this->save();
+    }
+
+    /**
+     * Check if user has valid API token
+     */
+    public function hasApiToken()
+    {
+        return !empty($this->api_token);
     }
 }
