@@ -279,7 +279,17 @@
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // Setup global helper functions
+    window.api = {
+        formatCurrency: formatCurrency,
+        formatDate: formatDate,
+        formatDateTime: formatDateTime
+    };
+
+    // First, setup axios token from meta tag (already done in layout)
+    // Then load dashboard data
     loadDashboardData();
+    // Finally load API token display (if needed)
     loadApiToken();
 });
 
@@ -554,19 +564,21 @@ function displayAccounts(accounts) {
 }
 
 // API Token Functions
-async function loadApiToken() {
+function loadApiToken() {
     try {
-        const response = await axios.get('{{ route('api.auth.me') }}');
-        const apiToken = response.data.data.api_token;
+        // Get token from meta tag (already available from layout)
+        const apiTokenElement = document.querySelector('meta[name="api-token"]');
+        const apiToken = apiTokenElement ? apiTokenElement.content : '';
 
         if (apiToken) {
             document.getElementById('apiTokenDisplay').value = apiToken;
+            console.log('API Token loaded from meta tag:', apiToken.substring(0, 20) + '...');
         } else {
-            document.getElementById('apiTokenDisplay').value = 'No API token found. Please regenerate.';
+            document.getElementById('apiTokenDisplay').value = 'No API token found. Please login again.';
         }
     } catch (error) {
-        console.error('Failed to load API token:', error);
-        document.getElementById('apiTokenDisplay').value = 'Failed to load API token';
+        console.error('Error loading API token:', error);
+        document.getElementById('apiTokenDisplay').value = 'Error loading token';
     }
 }
 

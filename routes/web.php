@@ -1,6 +1,14 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\HomeController;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\TransactionController;
+use App\Http\Controllers\AccountController;
+use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\ReportController;
+use App\Http\Controllers\InstallmentController;
+use App\Http\Controllers\PaylaterController;
 
 /*
 |--------------------------------------------------------------------------
@@ -19,37 +27,40 @@ Route::get('/', function () {
 
 Auth::routes();
 
-Route::get('/home', 'HomeController@index')->name('home');
+Route::get('/home', [HomeController::class, 'index'])->name('home');
 
 // Finance App Routes (Protected by auth middleware)
 Route::middleware(['auth'])->group(function () {
     // Dashboard
-    Route::get('/dashboard', 'DashboardController@index')->name('dashboard');
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     // Transactions
-    Route::resource('transactions', 'TransactionController');
-    Route::get('/transactions/create/{type}', 'TransactionController@create')->name('transactions.create.type');
+    Route::resource('transactions', TransactionController::class);
+    Route::get('/transactions/create/{type}', [TransactionController::class, 'create'])->name('transactions.create.type');
 
     // Accounts
-    Route::resource('accounts', 'AccountController');
-    Route::get('/accounts/{account}/transactions', 'AccountController@transactions')->name('accounts.transactions');
+    Route::resource('accounts', AccountController::class);
+    Route::get('/accounts/{account}/transactions', [AccountController::class, 'transactions'])->name('accounts.transactions');
 
     // Categories
-    Route::resource('categories', 'CategoryController');
+    Route::resource('categories', CategoryController::class);
 
     // Reports
-    Route::get('/reports', 'ReportController@index')->name('reports.index');
-    Route::get('/reports/summary', 'ReportController@summary')->name('reports.summary');
-    Route::get('/reports/cash-flow', 'ReportController@cashFlow')->name('reports.cash-flow');
-    Route::get('/reports/export', 'ReportController@export')->name('reports.export');
+    Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
+    Route::get('/reports/summary', [ReportController::class, 'summary'])->name('reports.summary');
+    Route::get('/reports/cash-flow', [ReportController::class, 'cashFlow'])->name('reports.cash-flow');
+    Route::get('/reports/export', [ReportController::class, 'export'])->name('reports.export');
 
     // Installments
-    Route::resource('installments', 'InstallmentController');
-    Route::get('/installments/{installment}/pay', 'InstallmentController@pay')->name('installments.pay');
+    Route::resource('installments', InstallmentController::class);
+    Route::get('/installments/{installment}/pay', [InstallmentController::class, 'pay'])->name('installments.pay');
 
     // Paylater
-    Route::resource('paylater', 'PaylaterController');
-    Route::get('/paylater/{paylater}/details', 'PaylaterController@details')->name('paylater.details');
-    Route::get('/paylater/{paylater}/pay', 'PaylaterController@pay')->name('paylater.pay');
-    Route::post('/paylater/{paylater}/pay', 'PaylaterController@processPayment')->name('paylater.processPayment');
+    Route::resource('paylater', PaylaterController::class);
+    Route::get('/paylater/{paylater}/details', [PaylaterController::class, 'details'])->name('paylater.details');
+    Route::get('/paylater/{paylater}/pay', [PaylaterController::class, 'pay'])->name('paylater.pay');
+    Route::post('/paylater/{paylater}/pay', [PaylaterController::class, 'processPayment'])->name('paylater.processPayment');
 });
+Auth::routes();
+
+Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');

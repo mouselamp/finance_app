@@ -1,470 +1,66 @@
-# 💰 Personal Finance Manager
-
-Aplikasi web **manajemen keuangan pribadi** berbasis **Laravel** dengan fitur lengkap untuk mengelola pemasukan, pengeluaran, transfer, dan sistem paylater cicilan.
-
----
-
-## 🌟 Fitur Utama
-
-### 🔐 Autentikasi & Keamanan
-- **Login & Register** dengan Laravel UI
-- **Middleware Protection** untuk semua halaman keuangan
-- **User-specific Data** - setiap user hanya bisa melihat data miliknya
-
-### 💵 Manajemen Transaksi
-- **Multi-type Transactions**: Income, Expense, Transfer antar akun
-- **Categorization**: Organisir transaksi dengan kategori kustom
-- **Real-time Balance**: Update otomatis saldo akun
-- **Transaction History**: Riwayat lengkap semua transaksi
-- **Advanced Filtering**: Filter berdasarkan tanggal, kategori, akun, tipe
-
-### 💳 Sistem Paylater
-- **Paylater Accounts**: Support untuk akun kredit (Shopee PayLater, Kredivo, dll)
-- **Cicilan System**:
-  - Bayar penuh atau cicilan (1-12 bulan)
-  - Tracking status pembayaran
-  - Overdue notifications
-  - Automatic balance updates
-- **Payment Management**: Bayar cicilan dari akun lain
-
-### 🏦 Multi-Account Management
-- **Account Types**: Cash, Bank, E-Wallet, Paylater
-- **Balance Tracking**: Monitor saldo real-time semua akun
-- **Account Details**: Informasi lengkap dan transaksi per akun
-- **Account Limits**: Set limit untuk akun paylater
-
-### 📊 Dashboard & Analytics
-- **Financial Overview**: Ringkasan total saldo, pemasukan, pengeluaran
-- **Visual Charts**: Grafik interaktif dengan Chart.js
-- **Recent Transactions**: Monitor transaksi terbaru
-- **Quick Actions**: Akses cepat tambah transaksi
-- **Statistics**: Statistik detail per kategori dan periode
-
-### 📱 Modern UI/UX
-- **Responsive Design**: Optimal di desktop dan mobile
-- **Dark Mode Support**: Interface yang nyaman di mata
-- **Real-time Updates**: Update tanpa refresh halaman
-- **Modern Cards**: Design bersih dengan Tailwind CSS
-- **Interactive Elements**: Smooth transitions dan micro-interactions
-
-### 📝 Logging & Monitoring
-- **Daily Logging**: Otomatis buat log file per hari
-- **Activity Tracking**: Log transaksi, login, dan error
-- **7 Days Retention**: Log disimpan 7 hari terakhir
-- **Simple Format**: Format log yang mudah dibaca
-
----
-
-## 🔒 Kompatibilitas PHP
-
-### ✅ PHP Version Support
-- **PHP 7.2.34** - Minimum requirement
-- **PHP 7.3.x** - Fully supported
-- **PHP 7.4.x** - Fully supported
-- **PHP 8.x** - Fully compatible
-
-### 🚫 Features Not Used (for PHP 7.2 compatibility)
-- Arrow functions (`fn()`)
-- Typed properties (`public string $name`)
-- Match expressions (`match()`)
-- Null coalescing assignment (`??=`)
-- Spread operator in arrays (`...$array`)
-
-**Note**: Aplikasi sengaja tidak menggunakan fitur PHP 7.4+ untuk menjaga kompatibilitas maksimal dengan PHP 7.2.34.
-
----
-
-## 🛠️ Teknologi
-
-### Backend
-- **PHP 7.2+**
-- **Laravel 7.x**
-- **MySQL/MariaDB**
-- **RESTful API**
-- **Eloquent ORM**
-
-### Frontend
-- **Blade Templates**
-- **Tailwind CSS**
-- **JavaScript (Vanilla)**
-- **Font Awesome Icons**
-- **Chart.js** untuk visualisasi data
-
----
-
-## 📋 Requirements
-
-- PHP 7.2.34 atau higher
-- Composer
-- MySQL/MariaDB
-- Web server (Apache/Nginx)
-- Node.js & NPM (untuk development assets)
-
----
-
-## 🚀 Instalasi
-
-### 1. Clone Repository
-```bash
-git clone https://github.com/mouselamp/finance_app.git
-cd finance_app
-```
-
-### 2. Install Dependencies
-```bash
-composer install
-npm install
-```
-
-### 3. Environment Setup
-```bash
-cp .env.example .env
-php artisan key:generate
-```
-
-### 4. Konfigurasi Database
-Edit file `.env`:
-```env
-DB_CONNECTION=mysql
-DB_HOST=127.0.0.1
-DB_PORT=3306
-DB_DATABASE=financial_app
-DB_USERNAME=your_username
-DB_PASSWORD=your_password
-```
-
-### 5. Database Migration
-```bash
-php artisan migrate
-```
-
-### 6. Link Storage
-```bash
-php artisan storage:link
-```
-
-### 7. Verify PHP Compatibility
-```bash
-# Check platform requirements
-composer check-platform-reqs
-
-# Verify Laravel compatibility
-php artisan about
-```
-
-### 8. Build Assets
-```bash
-npm run dev
-# atau untuk production
-npm run build
-```
-
-### 9. Start Application
-```bash
-php artisan serve
-# atau akses langsung ke folder /public
-```
-
----
-
-## 📖 Panduan Penggunaan
-
-### 🏠 Dashboard
-- **Overview**: Lihat ringkasan keuangan Anda
-- **Quick Actions**: Tambah transaksi cepat
-- **Recent Transactions**: Monitor transaksi terbaru
-- **Statistics**: Grafik pemasukan/pengeluaran
-
-### 💸 Transaksi
-
-#### Menambah Income
-1. Klik "Tambah Transaksi" → "Pemasukan"
-2. Pilih akun tujuan
-3. Masukkan jumlah dan kategori
-4. Tambah catatan (opsional)
-5. Klik "Simpan"
-
-#### Menambah Expense
-1. Klik "Tambah Transaksi" → "Pengeluaran"
-2. Pilih akun sumber
-3. **Untuk Paylater**: Pilih akun paylater untuk opsi cicilan
-4. Masukkan jumlah dan kategori
-5. **Paylater Options**:
-   - **Bayar Penuh**: Lunas sekaligus
-   - **Cicilan**: Pilih jangka waktu (1-12 bulan)
-6. Klik "Simpan"
-
-#### Transfer Antar Akun
-1. Klik "Transfer"
-2. Pilih akun sumber dan tujuan
-3. Masukkan jumlah transfer
-4. Tambah catatan
-5. Klik "Transfer"
-
-### 🏦 Manajemen Akun
-
-#### Membuat Akun Baru
-1. Menu "Akun" → "Tambah Akun"
-2. **Informasi Akun**:
-   - Nama akun (contoh: BNI, Gopay, Cash)
-   - Tipe akun: Cash, Bank, E-Wallet, Paylater
-3. **Untuk Paylater**: Set limit kredit
-4. Klik "Simpan"
-
-#### Mengelola Paylater
-- **Buat Transaksi**: Pilih akun paylater saat membuat expense
-- **Bayar Cicilan**: Menu "Paylater" → pilih transaksi → "Bayar Cicilan"
-- **Pilih cicilan** yang akan dibayar
-- **Pilih metode pembayaran** dari akun lain
-- **Konfirmasi pembayaran**
-
-### 🏷️ Kategori
-1. Menu "Kategori" → "Tambah Kategori"
-2. Masukkan nama kategori
-3. Pilih tipe (Income/Expense)
-4. Tambah catatan (opsional)
-
----
-
-## 💡 Tips Penggunaan
-
-### Budget Management
-- **Track Expenses**: Monitor pengeluaran harian/mingguan
-- **Category Analysis**: Lihat pengeluaran per kategori
-- **Set Goals**: Alokasikan budget per kategori
-
-### Paylater Best Practices
-- **Monitor Due Dates**: Perhatikan jatuh tempo cicilan
-- **Pay On Time**: Hindari denda keterlambatan
-- **Balance Usage**: Jangan melebihi 80% limit
-
-### Financial Planning
-- **Monthly Review**: Review keuangan bulanan
-- **Saving Goals**: Set target tabungan
-- **Emergency Fund**: Siapkan dana darurat
-
----
-
-## 🎯 Kategori Umum
-
-| Jenis | Contoh Kategori |
-|-------|-----------------|
-| **Pemasukan** | Gaji, Bonus, Freelance, Penjualan, Hadiah |
-| **Pengeluaran** | Makan, Transport, Tagihan, Belanja, Hiburan |
-| **Investasi** | Saham, Reksadana, Crypto |
-| **Kesehatan** | Asuransi, Obat-obatan, Dokter |
-| **Edukasi** | Kursus, Buku, Seminar |
-
----
-
-## 🏛️ Akun Payment
-
-| Tipe Akun | Contoh |
-|-----------|--------|
-| **Cash** | Dompet, Cash di rumah |
-| **Bank** | BCA, Mandiri, BNI, BRI |
-| **E-Wallet** | Gopay, OVO, Dana, ShopeePay |
-| **Paylater** | Shopee PayLater, Kredivo, Akulaku |
-
----
-
-## 🔧 Konfigurasi
-
-### Environment Variables
-```env
-# Application
-APP_NAME="Financial Management"
-APP_ENV=local
-APP_DEBUG=true
-APP_URL=http://localhost
-
-# Database
-DB_CONNECTION=mysql
-DB_HOST=127.0.0.1
-DB_PORT=3306
-DB_DATABASE=financial_app
-
-# Currency
-DEFAULT_CURRENCY=IDR
-CURRENCY_SYMBOL=Rp
-```
-
----
-
-## 📊 API Endpoints
-
-### Authentication
-- `POST /api/login` - User login
-- `GET /api/auth/me` - Get current user
-
-### Transactions
-- `GET /api/transactions` - List transactions
-- `POST /api/transactions` - Create transaction
-- `GET /api/transactions/statistics` - Get statistics
-
-### Accounts
-- `GET /api/accounts` - List accounts
-- `POST /api/accounts` - Create account
-- `PUT /api/accounts/{id}` - Update account
-
----
-
-## 🚨 Troubleshooting
-
-### Common Issues
-
-#### 1. Blank Page
-```bash
-php artisan config:cache
-php artisan route:cache
-php artisan view:cache
-```
-
-#### 2. Database Connection
-- Check `.env` configuration
-- Verify database is running
-- Check credentials
-
-#### 3. Assets Not Loading
-```bash
-npm run build
-php artisan storage:link
-```
-
-#### 4. PHP Version Issues (PHP 7.2.34)
-```bash
-# Check PHP version
-php -v
-
-# Check Laravel requirements
-php artisan about
-
-# Clear caches
-php artisan cache:clear
-php artisan config:clear
-php artisan route:clear
-php artisan view:clear
-
-# Check Composer compatibility
-composer check-platform-reqs
-```
-
-#### 5. Memory Limit (PHP 7.2)
-```bash
-# Increase memory limit if needed
-php -d memory_limit=512M artisan serve
-# or set in php.ini:
-memory_limit = 512M
-```
-
-#### 6. Extension Requirements (PHP 7.2)
-Ensure these PHP extensions are enabled:
-- `php-cli`
-- `php-json`
-- `php-mbstring`
-- `php-openssl`
-- `php-pdo`
-- `php-mysql` (or `php-pgsql`)
-- `php-tokenizer`
-- `php-xml`
-
-#### 7. Logging Issues
-```bash
-# Check log directory permissions
-ls -la storage/logs/
-
-# Create log directory if missing
-mkdir -p storage/logs
-
-# Set proper permissions
-chmod 755 storage/logs
-
-# View today's log
-tail -f storage/logs/laravel-$(date +%Y-%m-%d).log
-```
-
-#### 8. API 401 Unauthorized (Server Deployment)
-```bash
-# Clear all caches
-php artisan cache:clear
-php artisan config:clear
-php artisan route:clear
-php artisan view:clear
-
-# Check session configuration
-grep SESSION_DRIVER .env
-
-# Set session domain for production
-SESSION_DOMAIN=yourdomain.com
-
-# Check file permissions
-chmod -R 755 storage bootstrap/cache
-
-# Regenerate application key
-php artisan key:generate
-```
-
----
-
-## 📝 Development
-
-### Composer Configuration
-```json
-{
-  "name": "mouselamp/finance_app",
-  "require": {
-    "php": "^7.2.34|^8.0",
-    "laravel/framework": "^7.29"
-  },
-  "config": {
-    "platform": {
-      "php": "7.2.34"
-    }
-  }
-}
-```
-
-### Database Migrations
-```bash
-php artisan make:migration create_transactions_table
-php artisan migrate
-```
-
-### Controllers
-- `TransactionController` - Manage transactions
-- `AccountController` - Manage accounts
-- `CategoryController` - Manage categories
-- `PaylaterController` - Manage paylater transactions
-
-### Models
-- `Transaction` - Transaction model
-- `Account` - Account model
-- `Category` - Category model
-- `PaylaterTransaction` - Paylater specific transactions
-- `Installment` - Installment payments
-
----
-
-## 🤝 Kontribusi
-
-1. Fork the repository
-2. Create feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to branch (`git push origin feature/AmazingFeature`)
-5. Open Pull Request
-
----
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
----
-
-## 👨‍💻 Author
-
-**Your Name** - [GitHub Profile](https://github.com/username)
-
----
-
-**© 2024 Financial Management App. All rights reserved.**
+<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+
+<p align="center">
+<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
+<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
+<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
+<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
+</p>
+
+## About Laravel
+
+Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+
+- [Simple, fast routing engine](https://laravel.com/docs/routing).
+- [Powerful dependency injection container](https://laravel.com/docs/container).
+- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
+- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
+- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
+- [Robust background job processing](https://laravel.com/docs/queues).
+- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+
+Laravel is accessible, powerful, and provides tools required for large, robust applications.
+
+## Learning Laravel
+
+Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+
+You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+
+If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+
+## Laravel Sponsors
+
+We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+
+### Premium Partners
+
+- **[Vehikl](https://vehikl.com/)**
+- **[Tighten Co.](https://tighten.co)**
+- **[WebReinvent](https://webreinvent.com/)**
+- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
+- **[64 Robots](https://64robots.com)**
+- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
+- **[Cyber-Duck](https://cyber-duck.co.uk)**
+- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
+- **[Jump24](https://jump24.co.uk)**
+- **[Redberry](https://redberry.international/laravel/)**
+- **[Active Logic](https://activelogic.com)**
+- **[byte5](https://byte5.de)**
+- **[OP.GG](https://op.gg)**
+
+## Contributing
+
+Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+
+## Code of Conduct
+
+In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+
+## Security Vulnerabilities
+
+If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+
+## License
+
+The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).

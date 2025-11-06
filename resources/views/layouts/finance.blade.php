@@ -25,35 +25,20 @@
 
     <!-- Favicons -->
     <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('icons/apple-touch-icon.png') }}">
-    <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('icons/favicon-32x32.png') }}">
-    <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('icons/favicon-16x16.png') }}">
+    <link rel="icon" type="image/png" sizes="96x96" href="{{ asset('icons/favicon-96x96.png') }}">
     <link rel="icon" href="{{ asset('icons/favicon.ico') }}">
-    <link rel="mask-icon" href="{{ asset('icons/safari-pinned-tab.svg') }}" color="#2563eb">
+    <link rel="icon" type="image/svg+xml" href="{{ asset('icons/favicon.svg') }}">
     <meta name="msapplication-TileColor" content="#2563eb">
     <meta name="theme-color" content="#2563eb">
 
     <!-- Compiled CSS (Tailwind + PWA Styles) -->
-    <link rel="stylesheet" href="{{ mix('css/app.css') }}">
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
 
     <!-- Chart.js from CDN (keep for flexibility) -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <!-- Font Awesome Icons (CDN for now) -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
-    <!-- Custom Tailwind Config -->
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        primary: '#2563eb',
-                        secondary: '#64748b',
-                    }
-                }
-            }
-        }
-    </script>
 
     @stack('styles')
 </head>
@@ -189,6 +174,19 @@
 
     <!-- Alpine.js Event Listener for Sidebar Toggle -->
     <script>
+        // Setup axios default headers with API token
+        document.addEventListener('DOMContentLoaded', function() {
+            const apiToken = document.querySelector('meta[name="api-token"]');
+            console.log('API Token meta tag:', apiToken);
+            if (apiToken && apiToken.content) {
+                console.log('Setting up axios with token:', apiToken.content.substring(0, 20) + '...');
+                window.axios.defaults.headers.common['Authorization'] = 'Bearer ' + apiToken.content;
+                console.log('Axios headers after setup:', window.axios.defaults.headers.common);
+            } else {
+                console.log('No API token found - user not logged in');
+            }
+        });
+
         document.addEventListener('toggle-sidebar', function() {
             // Find the sidebar element and toggle it
             const sidebarComponent = document.querySelector('[x-data*="sidebarOpen"]');
@@ -202,9 +200,7 @@
     </script>
 
   
-    <!-- Include compiled JavaScript (Alpine.js + PWA functionality) -->
-    <script src="{{ mix('js/app.js') }}"></script>
-
+    
     @stack('scripts')
 </body>
 </html>

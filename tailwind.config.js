@@ -1,11 +1,10 @@
-module.exports = {
-  purge: [
-    './resources/views/**/*.blade.php',
-    './resources/js/**/*.js',
-    './resources/sass/**/*.sass',
-    './resources/sass/**/*.scss'
+/** @type {import('tailwindcss').Config} */
+export default {
+  content: [
+    "./resources/**/*.blade.php",
+    "./resources/**/*.js",
+    "./resources/**/*.vue",
   ],
-  darkMode: false, // or 'media' or 'class'
   theme: {
     extend: {
       colors: {
@@ -14,8 +13,8 @@ module.exports = {
       }
     },
   },
-  variants: {
-    extend: {},
-  },
-  plugins: [],
+  plugins: [
+    require('@tailwindcss/forms'),
+    require('@tailwindcss/typography'),
+  ],
 }

@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use App\User;
+use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
 
@@ -30,8 +30,8 @@ class AuthController extends Controller
                 ], 401);
             }
 
-            // Generate API token
-            $token = $user->generateApiToken();
+            // Use existing API token
+            $token = $user->api_token;
 
             return response()->json([
                 'success' => true,
@@ -95,7 +95,17 @@ class AuthController extends Controller
     public function me(Request $request)
     {
         try {
-            $user = auth()->user();
+            // Manual token validation since middleware might not be working
+            $token = $request->bearerToken();
+
+            if (!$token) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Token not provided'
+                ], 401);
+            }
+
+            $user = User::where('api_token', $token)->first();
 
             if (!$user) {
                 return response()->json([
@@ -108,7 +118,7 @@ class AuthController extends Controller
                 'success' => true,
                 'data' => $user,
                 'api_token' => $user->api_token,
-                'has_api_token' => $user->hasApiToken(),
+                'has_api_token' => !empty($user->api_token),
                 'message' => 'User details retrieved successfully'
             ]);
 

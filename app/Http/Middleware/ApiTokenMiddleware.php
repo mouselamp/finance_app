@@ -4,49 +4,44 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
-use App\User;
+use App\Models\User;
+use Symfony\Component\HttpFoundation\Response;
 
 class ApiTokenMiddleware
 {
     /**
      * Handle an incoming request.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \Closure  $next
-     * @return mixed
+     * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
      */
-    public function handle(Request $request, Closure $next)
+    public function handle(Request $request, Closure $next): Response
     {
-        $token = $request->bearerToken() ?? $request->header('X-API-TOKEN');
+        $token = $request->bearerToken();
 
         if (!$token) {
             return response()->json([
-                'error' => 'API token required',
-                'message' => 'Please provide API token in Authorization header or X-API-TOKEN header'
+                'success' => false,
+                'message' => 'Token not provided'
             ], 401);
         }
 
-        // Find user by api_token
         $user = User::where('api_token', $token)->first();
 
         if (!$user) {
             return response()->json([
-                'error' => 'Invalid API token',
-                'message' => 'The provided API token is invalid'
+                'success' => false,
+                'message' => 'Invalid token'
             ], 401);
         }
 
-        // Set authenticated user
-        auth()->setUser($user);
+        // Set the authenticated user using the default guard
+        auth()->guard()->setUser($user);
 
-        // Continue with request
-        $response = $next($request);
+        // Alternative approach - set user in the request
+        $request->setUserResolver(function () use ($user) {
+            return $user;
+        });
 
-        // Add CORS headers for API
-        $response->headers->set('Access-Control-Allow-Origin', '*');
-        $response->headers->set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-        $response->headers->set('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-API-TOKEN, X-Requested-With');
-
-        return $response;
+        return $next($request);
     }
 }
