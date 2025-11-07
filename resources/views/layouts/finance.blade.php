@@ -159,11 +159,6 @@
         </div>
     </div>
 
-    <!-- Offline Indicator -->
-    <div class="offline-indicator">
-        <i class="fas fa-wifi mr-2"></i> Anda sedang offline
-    </div>
-
     <!-- PWA Install Prompt -->
     <div id="pwaInstallPrompt" class="pwa-install-prompt">
         <i class="fas fa-download"></i>
@@ -199,8 +194,8 @@
         });
     </script>
 
-  
-    
+
+
     @stack('scripts')
 </body>
 </html>
