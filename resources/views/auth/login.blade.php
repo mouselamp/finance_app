@@ -7,12 +7,12 @@
     <title>Sign In | Finance App</title>
 
     <!-- Bootstrap CSS -->
-    <link href="{{ asset('login_assets/css/bootstrap.min.css') }}" rel="stylesheet">
+    <link href="{{ asset('auth/css/bootstrap.min.css') }}" rel="stylesheet">
     <!-- Font Awesome -->
-    <link href="{{ asset('login_assets/css/fontawesome-simple.css') }}" rel="stylesheet">
+    <link href="{{ asset('auth/css/fontawesome-simple.css') }}" rel="stylesheet">
     <!-- Custom CSS -->
-    <link href="{{ asset('login_assets/css/login.min.css?v=' . filemtime(public_path('login_assets/css/login.min.css'))) }}" rel="stylesheet">
-    <link href="{{ asset('login_assets/css/login-fixes.css?v=' . filemtime(public_path('login_assets/css/login-fixes.css'))) }}" rel="stylesheet">
+    <link href="{{ asset('auth/css/auth.min.css') }}" rel="stylesheet">
+    <link href="{{ asset('auth/css/auth-fixes.css') }}" rel="stylesheet">
 </head>
 <body>
     <div class="auth-page-wrapper pt-5">
@@ -133,7 +133,7 @@
     </div>
 
     <!-- JavaScript -->
-    <script src="{{ asset('login_assets/js/bootstrap.bundle.min.js') }}"></script>
-    <script src="{{ asset('login_assets/js/login.min.js') }}"></script>
+    <script src="{{ asset('auth/js/bootstrap.bundle.min.js') }}"></script>
+    <script src="{{ asset('auth/js/auth.min.js') }}"></script>
 </body>
 </html>
