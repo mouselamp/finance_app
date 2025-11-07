@@ -22,7 +22,7 @@ use App\Http\Controllers\PaylaterController;
 */
 
 Route::get('/', function () {
-    return redirect('/home');
+    return redirect('/dashboard');
 });
 
 Auth::routes();
