@@ -1,0 +1,47 @@
+/* Password toggle button fixes */
+.password-addon {
+    background: none !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 8px !important;
+    z-index: 10;
+}
+
+.password-addon:hover {
+    background: none !important;
+    box-shadow: none !important;
+}
+
+.password-addon:focus {
+    background: none !important;
+    box-shadow: none !important;
+    outline: none !important;
+}
+
+.password-addon svg {
+    width: 16px;
+    height: 16px;
+    color: #6c757d;
+    transition: color 0.3s ease;
+}
+
+.password-addon:hover svg {
+    color: #667eea;
+}
+
+.auth-pass-inputgroup {
+    position: relative;
+}
+
+.auth-pass-inputgroup .form-control {
+    padding-right: 45px !important;
+}
+
+/* Fix Bootstrap button overrides */
+.btn-link {
+    text-decoration: none !important;
+}
+
+.btn-link:hover {
+    text-decoration: none !important;
+}

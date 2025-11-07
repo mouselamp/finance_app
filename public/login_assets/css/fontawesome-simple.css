@@ -1,0 +1,22 @@
+/* Font Awesome Icons - Simple Version */
+@font-face {
+  font-family: 'Font Awesome 6 Free';
+  src: url('../webfonts/fa-solid-900.woff2') format('woff2'),
+       url('../webfonts/fa-solid-900.ttf') format('truetype');
+  font-weight: 900;
+  font-style: normal;
+  font-display: block;
+}
+
+.fa {
+  display: inline-block;
+  font-family: 'Font Awesome 6 Free';
+  font-style: normal;
+  font-weight: 900;
+  line-height: 1;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.fa-eye:before { content: "\f06e"; }
+.fa-eye-slash:before { content: "\f070"; }
