@@ -22,6 +22,7 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'api_token',
     ];
 
     /**
@@ -32,6 +33,7 @@ class User extends Authenticatable
     protected $hidden = [
         'password',
         'remember_token',
+        'api_token',
     ];
 
     /**
@@ -43,4 +45,38 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
     ];
+
+    /**
+     * Generate API token for the user
+     */
+    public function generateApiToken()
+    {
+        $token = \Illuminate\Support\Str::random(80);
+        $this->api_token = $token;
+        $this->save();
+        return $token;
+    }
+
+    /**
+     * Revoke API token
+     */
+    public function revokeApiToken()
+    {
+        $this->api_token = null;
+        $this->save();
+    }
+
+    /**
+     * Boot method to generate token on user creation
+     */
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::created(function ($user) {
+            if (empty($user->api_token)) {
+                $user->generateApiToken();
+            }
+        });
+    }
 }
