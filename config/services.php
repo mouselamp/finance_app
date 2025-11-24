@@ -31,4 +31,10 @@ return [
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
+    'receipt_ai' => [
+        'url' => env('RECEIPT_AI_URL', 'https://api.z.ai/api/paas/v4/chat/completions'),
+        'api_key' => env('RECEIPT_AI_API_KEY'),
+        'model' => env('RECEIPT_AI_MODEL', 'glm-4.5v'),
+    ],
+
 ];

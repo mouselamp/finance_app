@@ -9,6 +9,7 @@ use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\InstallmentController;
 use App\Http\Controllers\PaylaterController;
+use App\Http\Controllers\ReceiptController;
 
 /*
 |--------------------------------------------------------------------------
@@ -60,6 +61,11 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/paylater/{paylater}/details', [PaylaterController::class, 'details'])->name('paylater.details');
     Route::get('/paylater/{paylater}/pay', [PaylaterController::class, 'pay'])->name('paylater.pay');
     Route::post('/paylater/{paylater}/pay', [PaylaterController::class, 'processPayment'])->name('paylater.processPayment');
+
+    // Receipt Analyzer
+    Route::get('/receipts', [ReceiptController::class, 'index'])->name('receipts.index');
+    Route::post('/receipts/analyze', [ReceiptController::class, 'analyze'])->name('receipts.analyze');
+    Route::post('/receipts/{receipt}/save', [ReceiptController::class, 'storeTransaction'])->name('receipts.save');
 });
 Auth::routes();
 
