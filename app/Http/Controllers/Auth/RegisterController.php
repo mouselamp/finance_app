@@ -72,6 +72,10 @@ class RegisterController extends Controller
         // Generate API token after user creation
         $user->generateApiToken();
 
+        // Seed default categories for the new user
+        $seeder = new \Database\Seeders\CategorySeeder();
+        $seeder->run($user);
+
         return $user;
     }
 }

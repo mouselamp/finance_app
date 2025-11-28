@@ -21,14 +21,14 @@
     </div>
 
     <!-- Sidebar -->
-    <div x-show="sidebarOpen"
+    <div :class="{'block': sidebarOpen, 'hidden': !sidebarOpen}"
+         class="fixed inset-y-0 left-0 z-50 w-64 overflow-y-auto bg-white shadow-xl lg:static lg:inset-0 lg:transform-none lg:translate-x-0 lg:z-auto lg:shadow-none lg:min-h-screen hidden lg:!block"
          x-transition:enter="transition ease-in-out duration-300 transform"
          x-transition:enter-start="-translate-x-full"
          x-transition:enter-end="translate-x-0"
          x-transition:leave="transition ease-in-out duration-300 transform"
          x-transition:leave-start="translate-x-0"
-         x-transition:leave-end="-translate-x-full"
-         class="fixed inset-y-0 left-0 z-50 w-64 overflow-y-auto bg-white shadow-xl lg:static lg:inset-0 lg:transform-none lg:translate-x-0 lg:z-auto lg:shadow-none lg:min-h-screen">
+         x-transition:leave-end="-translate-x-full">
 
         <!-- Logo -->
         <div class="flex items-center justify-between h-16 px-6 bg-blue-600">

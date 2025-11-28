@@ -92,15 +92,31 @@ async function loadAccounts() {
         document.getElementById('accountGrid').classList.add('hidden');
 
         const response = await axios.get('{{ route("api.accounts.index") }}');
+        
+        console.log('API Response:', response.data); // Debug log
 
-        if (response.data.success && response.data.data.accounts.length > 0) {
-            displayAccounts(response.data.data.accounts);
-            displaySummary(response.data.data.accounts);
+        // Handle response structure
+        let accounts = [];
+        if (response.data.data && response.data.data.accounts) {
+             // Structure: { success: true, data: { accounts: [...] } }
+            accounts = response.data.data.accounts;
+        } else if (Array.isArray(response.data)) {
+            // Structure: [...] (Direct array)
+            accounts = response.data;
+        } else if (response.data.data && Array.isArray(response.data.data)) {
+             // Structure: { data: [...] } (Standard Laravel Resource)
+            accounts = response.data.data;
+        }
+
+        if (accounts.length > 0) {
+            displayAccounts(accounts);
+            displaySummary(accounts);
             document.getElementById('accountGrid').classList.remove('hidden');
         } else {
             document.getElementById('emptyState').classList.remove('hidden');
         }
     } catch (error) {
+        console.error('Error loading accounts:', error); // Debug log
         handleApiError(error, 'Memuat data akun');
     } finally {
         document.getElementById('loadingState').classList.add('hidden');

@@ -67,6 +67,4 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/receipts/analyze', [ReceiptController::class, 'analyze'])->name('receipts.analyze');
     Route::post('/receipts/{receipt}/save', [ReceiptController::class, 'storeTransaction'])->name('receipts.save');
 });
-Auth::routes();
 
-Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
