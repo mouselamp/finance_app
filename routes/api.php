@@ -54,4 +54,8 @@ Route::middleware('auth.token')->group(function () {
         Route::put('/{id}', [App\Http\Controllers\Api\ApiCategoryController::class, 'update'])->name('api.categories.update');
         Route::delete('/{id}', [App\Http\Controllers\Api\ApiCategoryController::class, 'destroy'])->name('api.categories.destroy');
     });
+
+    // Api Routes for Reports
+    Route::get('/reports', [App\Http\Controllers\Api\ApiReportController::class, 'index'])->name('api.reports.index');
+    Route::get('/reports/details', [App\Http\Controllers\Api\ApiReportController::class, 'details'])->name('api.reports.details');
 });
