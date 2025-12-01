@@ -111,9 +111,9 @@
                     <label for="note" class="block text-sm font-medium text-gray-700">
                         Catatan <span class="text-red-500">*</span>
                     </label>
-                    <input type="text" name="note" id="note" required maxlength="255"
+                    <textarea name="note" id="note" required rows="3"
                            placeholder="Contoh: Gaji bulanan, Belanja makanan, Transfer ke rekening BCA"
-                           class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                           class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"></textarea>
                     @error('note')
                         <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                     @enderror
