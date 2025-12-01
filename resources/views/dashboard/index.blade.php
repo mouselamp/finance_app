@@ -97,7 +97,7 @@
                 </div>
                 <div class="ml-5 w-0 flex-1">
                     <dl>
-                        <dt class="text-sm font-medium text-gray-500 truncate">Saldo Bersih</dt>
+                        <dt class="text-sm font-medium text-gray-500 truncate">Selisih Bulan Ini</dt>
                         <dd class="text-lg font-semibold text-green-600" id="netBalance">
                             +Rp 0
                         </dd>
@@ -382,9 +382,9 @@ async function loadStatistics() {
             // Update stats cards
             document.getElementById('totalBalance').textContent = formatCurrency(stats.total_balance || 0);
             document.getElementById('monthlyIncome').textContent = '+' + formatCurrency(stats.monthly_income || 0);
-            document.getElementById('monthlyExpenses').textContent = '-' + formatCurrency(stats.monthly_expenses || 0);
+            document.getElementById('monthlyExpenses').textContent = '-' + formatCurrency(stats.monthly_expense || 0);
 
-            const netBalance = (stats.monthly_income || 0) - (stats.monthly_expenses || 0);
+            const netBalance = (stats.monthly_income || 0) - (stats.monthly_expense || 0);
             const netBalanceElement = document.getElementById('netBalance');
             netBalanceElement.textContent = (netBalance >= 0 ? '+' : '') + formatCurrency(netBalance);
             netBalanceElement.className = `text-lg font-semibold ${netBalance >= 0 ? 'text-green-600' : 'text-red-600'}`;
