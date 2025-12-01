@@ -31,7 +31,7 @@
                         </div>
 
                         <div>
-                            <h2 class="text-lg font-semibold text-gray-900">
+                            <h2 class="text-lg font-semibold text-gray-900 break-words whitespace-pre-wrap">
                                 {{ $transaction->note ?: 'Tanpa Catatan' }}
                             </h2>
                             <p class="text-sm text-gray-500">

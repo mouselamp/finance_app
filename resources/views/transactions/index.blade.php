@@ -408,8 +408,8 @@ document.addEventListener('DOMContentLoaded', function() {
                         <div class="flex-1 min-w-0">
                             <!-- Title with Transfer Info -->
                             <div class="flex flex-col sm:flex-row sm:items-center sm:gap-2 mb-1">
-                                <h3 class="text-base sm:text-lg font-semibold text-gray-900 truncate">
-                                    ${transaction.note || 'Tanpa Catatan'}
+                                <h3 class="text-base sm:text-lg font-semibold text-gray-900" title="${transaction.note || ''}">
+                                    ${(transaction.note || 'Tanpa Catatan').length > 56 ? (transaction.note || 'Tanpa Catatan').substring(0, 56) + '...' : (transaction.note || 'Tanpa Catatan')}
                                 </h3>
                                 ${transaction.type === 'transfer' ?
                                     `<span class="text-xs sm:text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
