@@ -87,9 +87,10 @@
                         <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                             <span class="text-gray-500 sm:text-sm">Rp</span>
                         </div>
-                        <input type="number" name="amount" id="amount" required step="0.01" min="0"
-                               value="{{ old('amount', $transaction->amount) }}"
-                               class="pl-12 block w-full border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                        <input type="text" name="amount" id="amount" required inputmode="numeric"
+                               value="{{ old('amount', number_format($transaction->amount, 0, ',', '.')) }}"
+                               class="pl-12 block w-full border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                               placeholder="0">
                     </div>
                     @error('amount')
                         <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
@@ -321,7 +322,9 @@ document.addEventListener('DOMContentLoaded', function() {
             // Clean data
             if (!data.category_id || data.category_id === '') delete data.category_id;
             if (data.type !== 'transfer') delete data.related_account_id;
-            data.amount = parseFloat(data.amount);
+            
+            // Convert amount to number (clean formatted string)
+            data.amount = getRawAmount();
 
             const response = await axios.put('{{ route("api.transactions.update", $transaction->id) }}', data);
 
@@ -338,6 +341,27 @@ document.addEventListener('DOMContentLoaded', function() {
             submitBtn.innerHTML = originalText;
         }
     });
+
+    // Format amount input
+    const amountInput = document.getElementById('amount');
+
+    amountInput.addEventListener('input', function(e) {
+        // Remove non-digit characters
+        let value = this.value.replace(/\D/g, '');
+        
+        // Convert to number and format
+        if (value !== '') {
+            this.value = new Intl.NumberFormat('id-ID').format(value);
+        } else {
+            this.value = '';
+        }
+    });
+
+    // Helper to get raw numeric value from formatted input
+    function getRawAmount() {
+        const val = amountInput.value.replace(/\./g, ''); // Remove thousand separators
+        return parseFloat(val) || 0;
+    }
 });
 
 // Load categories via API

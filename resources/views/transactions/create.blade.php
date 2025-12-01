@@ -85,8 +85,9 @@
                         <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                             <span class="text-gray-500 sm:text-sm">Rp</span>
                         </div>
-                        <input type="number" name="amount" id="amount" required step="0.01" min="0"
-                               class="pl-12 block w-full border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                        <input type="text" name="amount" id="amount" required inputmode="numeric"
+                               class="pl-12 block w-full border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                               placeholder="0">
                     </div>
                     @error('amount')
                         <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
@@ -467,7 +468,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Update installment calculation
     function updateInstallmentCalculation() {
-        const amount = parseFloat(document.getElementById('amount').value) || 0;
+        const amount = getRawAmount();
         const period = parseInt(document.getElementById('installment_period').value) || 0;
 
         if (amount > 0 && period > 0) {
@@ -512,8 +513,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 delete data.related_account_id;
             }
 
-            // Convert amount to number
-            data.amount = parseFloat(data.amount);
+            // Convert amount to number (clean formatted string)
+            data.amount = getRawAmount();
 
             // Handle paylater data
             const paylaterField = document.getElementById('paylater_field');
@@ -560,11 +561,28 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // Format amount input
-    document.getElementById('amount').addEventListener('input', function(e) {
-        if (e.target.value < 0) {
-            e.target.value = 0;
+    const amountInput = document.getElementById('amount');
+
+    amountInput.addEventListener('input', function(e) {
+        // Remove non-digit characters
+        let value = this.value.replace(/\D/g, '');
+        
+        // Convert to number and format
+        if (value !== '') {
+            this.value = new Intl.NumberFormat('id-ID').format(value);
+        } else {
+            this.value = '';
         }
+        
+        // Update calculation if paylater installment is active
+        updateInstallmentCalculation();
     });
+
+    // Helper to get raw numeric value from formatted input
+    function getRawAmount() {
+        const val = amountInput.value.replace(/\./g, ''); // Remove thousand separators
+        return parseFloat(val) || 0;
+    }
 });
 
 // Load accounts via API
