@@ -349,19 +349,20 @@ class ApiTransactionController extends Controller
     {
         try {
             $user = Auth::user();
+            $now = now(); // Gunakan waktu server/aplikasi yang sudah diset timezone-nya
 
             $totalBalance = Account::where('user_id', $user->id)->sum('balance');
 
             $monthlyIncome = Transaction::where('user_id', $user->id)
                 ->where('type', 'income')
-                ->whereMonth('date', now()->month)
-                ->whereYear('date', now()->year)
+                ->whereMonth('date', $now->month)
+                ->whereYear('date', $now->year)
                 ->sum('amount');
 
             $monthlyExpense = Transaction::where('user_id', $user->id)
                 ->where('type', 'expense')
-                ->whereMonth('date', now()->month)
-                ->whereYear('date', now()->year)
+                ->whereMonth('date', $now->month)
+                ->whereYear('date', $now->year)
                 ->sum('amount');
 
             $recentTransactions = Transaction::where('user_id', $user->id)
