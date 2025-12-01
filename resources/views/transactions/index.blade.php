@@ -329,12 +329,30 @@ document.addEventListener('DOMContentLoaded', function() {
 
             const response = await axios.get('{{ route("api.transactions.index") }}?' + params.toString());
 
-            if (response.data.success && response.data.data && response.data.data.data && response.data.data.data.length > 0) {
-                displayTransactions(response.data.data);
-                displayPagination(response.data.data);
-                document.getElementById('transactionList').classList.remove('hidden');
-            } else {
-                document.getElementById('emptyState').classList.remove('hidden');
+            if (response.data.success) {
+                // Update Summary Cards if summary data exists
+                if (response.data.summary) {
+                    updateSummaryCards(
+                        response.data.summary.total_income, 
+                        response.data.summary.total_expense, 
+                        response.data.summary.net_balance
+                    );
+                }
+
+                if (response.data.data && response.data.data.data && response.data.data.data.length > 0) {
+                    displayTransactions(response.data.data);
+                    displayPagination(response.data.data);
+                    document.getElementById('transactionList').classList.remove('hidden');
+                } else {
+                    // If no transactions but we have summary (e.g. empty search result), show empty state
+                    // But keep summary visible? Usually empty state replaces list.
+                    // Let's just update summary to 0 if needed or keep last state.
+                    // If filtering yields no result, showing 0 in summary is correct.
+                    if (!response.data.summary) {
+                        updateSummaryCards(0, 0, 0);
+                    }
+                    document.getElementById('emptyState').classList.remove('hidden');
+                }
             }
         } catch (error) {
             handleApiError(error, 'Memuat data transaksi');
@@ -348,23 +366,11 @@ document.addEventListener('DOMContentLoaded', function() {
         const container = document.getElementById('transactionItems');
         container.innerHTML = '';
 
-        // Calculate totals for summary cards
-        let totalIncome = 0;
-        let totalExpense = 0;
-
-        transactions.data.forEach(transaction => {
-            if (transaction.type === 'income') {
-                totalIncome += parseFloat(transaction.amount);
-            } else if (transaction.type === 'expense') {
-                totalExpense += parseFloat(transaction.amount);
-            }
-        });
-
-        // Update summary cards
-        updateSummaryCards(totalIncome, totalExpense);
+        // Note: Totals are now calculated by backend and passed via summary object
+        // No need to calculate client-side anymore
 
         // Update transaction count
-        document.getElementById('transactionCount').textContent = transactions.data.length;
+        document.getElementById('transactionCount').textContent = transactions.total;
 
         // Create transaction items with modern design
         transactions.data.forEach(transaction => {
@@ -469,9 +475,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Update summary cards
-    function updateSummaryCards(income, expense) {
-        const netBalance = income - expense;
-
+    function updateSummaryCards(income, expense, netBalance) {
         document.getElementById('totalIncome').textContent = formatCurrency(income);
         document.getElementById('totalExpense').textContent = formatCurrency(expense);
         document.getElementById('netBalance').textContent = formatCurrency(netBalance);
@@ -480,6 +484,9 @@ document.addEventListener('DOMContentLoaded', function() {
         const netBalanceElement = document.getElementById('netBalance').parentElement.parentElement;
         if (netBalance < 0) {
             netBalanceElement.className = netBalanceElement.className.replace('from-blue-400 to-blue-600', 'from-orange-400 to-orange-600');
+        } else {
+            // Reset to blue if positive/zero (in case it was previously orange)
+            netBalanceElement.className = netBalanceElement.className.replace('from-orange-400 to-orange-600', 'from-blue-400 to-blue-600');
         }
     }
 

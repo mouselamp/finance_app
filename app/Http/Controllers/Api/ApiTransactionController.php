@@ -24,15 +24,76 @@ class ApiTransactionController extends Controller
      */
     public function index(Request $request)
     {
-        $transactions = Transaction::where('user_id', Auth::id())
-            ->with('category', 'account', 'relatedAccount')
-            ->orderBy('date', 'desc')
+        $query = Transaction::where('user_id', Auth::id())
+            ->with('category', 'account', 'relatedAccount');
+
+        // Apply Filters
+        if ($request->has('category') && $request->category) {
+            $query->where('category_id', $request->category);
+        }
+
+        if ($request->has('account') && $request->account) {
+            $query->where(function($q) use ($request) {
+                $q->where('account_id', $request->account)
+                  ->orWhere('related_account_id', $request->account);
+            });
+        }
+
+        if ($request->has('period') && $request->period) {
+            $now = now();
+            switch ($request->period) {
+                case 'month':
+                    $query->whereMonth('date', $now->month)->whereYear('date', $now->year);
+                    break;
+                case 'year':
+                    $query->whereYear('date', $now->year);
+                    break;
+                case '30':
+                default:
+                    // Assuming '30' is handled by frontend default or explicit check
+                    // If period is numeric '30', use 30 days lookback
+                    if (is_numeric($request->period)) {
+                        $query->where('date', '>=', $now->subDays($request->period)->format('Y-m-d'));
+                    }
+                    break;
+            }
+        }
+
+        // Clone query for summary stats BEFORE pagination
+        $summaryQuery = clone $query;
+
+        // Get paginated results
+        $transactions = $query->orderBy('date', 'desc')
             ->orderBy('created_at', 'desc')
             ->paginate(20);
+
+        // Calculate Summary Stats based on FILTERED data
+        // Note: We apply the same Paylater exclusion logic here
+        
+        // 1. Total Income (Filtered) - Exclude Paylater Income
+        $totalIncome = (clone $summaryQuery)
+            ->where('type', 'income')
+            ->whereHas('account', function($q) {
+                $q->where('type', '!=', 'paylater');
+            })
+            ->sum('amount');
+
+        // 2. Total Expense (Filtered) - Include Paylater Expense
+        $totalExpense = (clone $summaryQuery)
+            ->where('type', 'expense')
+            ->sum('amount');
+            
+        // 3. Net Balance
+        $netBalance = $totalIncome - $totalExpense;
 
         return response()->json([
             'success' => true,
             'data' => $transactions,
+            'summary' => [
+                'total_income' => $totalIncome,
+                'total_expense' => $totalExpense,
+                'net_balance' => $netBalance
+            ],
             'message' => 'Transactions retrieved successfully'
         ]);
     }
@@ -54,9 +115,9 @@ class ApiTransactionController extends Controller
                 'related_account_id' => 'required_if:type,transfer|exists:accounts,id,user_id,' . Auth::id() . '|different:account_id'
             ]);
 
-            // Check if selected account is paylater and validate paylater fields
+            // Check if selected account is paylater and validate paylater fields ONLY for expense transactions
             $account = Account::find($request->account_id);
-            if ($account && $account->type === 'paylater') {
+            if ($account && $account->type === 'paylater' && $request->type === 'expense') {
                 // Handle field mapping from frontend (installment_period) to backend (tenor)
                 $tenor = $request->payment_type === 'installment' ? ($request->installment_period ?? $request->tenor) : null;
 
@@ -351,14 +412,22 @@ class ApiTransactionController extends Controller
             $user = Auth::user();
             $now = now(); // Gunakan waktu server/aplikasi yang sudah diset timezone-nya
 
-            $totalBalance = Account::where('user_id', $user->id)->sum('balance');
+            // Total Balance: Exclude Paylater accounts
+            $totalBalance = Account::where('user_id', $user->id)
+                ->where('type', '!=', 'paylater')
+                ->sum('balance');
 
+            // Monthly Income: Exclude income transactions related to Paylater accounts
             $monthlyIncome = Transaction::where('user_id', $user->id)
                 ->where('type', 'income')
+                ->whereHas('account', function($q) {
+                    $q->where('type', '!=', 'paylater');
+                })
                 ->whereMonth('date', $now->month)
                 ->whereYear('date', $now->year)
                 ->sum('amount');
 
+            // Monthly Expense: Include Paylater expenses (because it is consumption)
             $monthlyExpense = Transaction::where('user_id', $user->id)
                 ->where('type', 'expense')
                 ->whereMonth('date', $now->month)
