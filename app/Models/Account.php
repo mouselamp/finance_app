@@ -17,6 +17,10 @@ class Account extends Model
         'note'
     ];
 
+    protected $appends = [
+        'type_label'
+    ];
+
     protected $casts = [
         'balance' => 'decimal:2'
     ];

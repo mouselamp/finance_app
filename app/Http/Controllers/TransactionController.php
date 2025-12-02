@@ -215,11 +215,24 @@ class TransactionController extends Controller
 
     public function show(Transaction $transaction)
     {
-        if ($transaction->user_id !== auth()->id()) {
+        $user = auth()->user();
+        
+        // Check permission: Own transaction OR Group member's transaction
+        $hasAccess = $transaction->user_id === $user->id;
+        
+        if (!$hasAccess && $user->group_id) {
+            // Check if transaction owner is in the same group
+            $owner = \App\Models\User::find($transaction->user_id);
+            if ($owner && $owner->group_id === $user->group_id) {
+                $hasAccess = true;
+            }
+        }
+
+        if (!$hasAccess) {
             abort(403);
         }
 
-        $transaction->load('category', 'account', 'relatedAccount');
+        $transaction->load('category', 'account', 'relatedAccount', 'user');
         return view('transactions.show', compact('transaction'));
     }
 

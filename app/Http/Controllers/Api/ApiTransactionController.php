@@ -24,15 +24,33 @@ class ApiTransactionController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Transaction::where('user_id', Auth::id())
-            ->with('category', 'account', 'relatedAccount');
+        $user = Auth::user();
+        $query = Transaction::query();
+
+        // Group Logic: If user belongs to a group, fetch transactions for ALL group members
+        if ($user->group_id) {
+            // Get all user IDs in the group
+            $groupMemberIds = \App\Models\User::where('group_id', $user->group_id)->pluck('id');
+            $query->whereIn('user_id', $groupMemberIds);
+        } else {
+            // Fallback to personal transactions only
+            $query->where('user_id', $user->id);
+        }
+
+        $query->with('category', 'account', 'relatedAccount', 'user'); // Eager load user relationship
 
         // Apply Filters
         if ($request->has('category') && $request->category) {
             $query->where('category_id', $request->category);
         }
 
-        if ($request->has('account') && $request->account) {
+        if ($request->has('account_id') && $request->account_id) {
+            $query->where(function($q) use ($request) {
+                $q->where('account_id', $request->account_id)
+                  ->orWhere('related_account_id', $request->account_id);
+            });
+        } elseif ($request->has('account') && $request->account) {
+            // Fallback for backward compatibility
             $query->where(function($q) use ($request) {
                 $q->where('account_id', $request->account)
                   ->orWhere('related_account_id', $request->account);
@@ -204,11 +222,28 @@ class ApiTransactionController extends Controller
      */
     public function show(string $id)
     {
-        $transaction = Transaction::where('user_id', Auth::id())
-            ->with('category', 'account', 'relatedAccount')
+        $user = Auth::user();
+        
+        // Determine allowed user IDs (Self + Group Members)
+        $allowedUserIds = [$user->id];
+        if ($user->group_id) {
+            $allowedUserIds = \App\Models\User::where('group_id', $user->group_id)->pluck('id')->toArray();
+        }
+
+        $transaction = Transaction::whereIn('user_id', $allowedUserIds)
+            ->with('category', 'account', 'relatedAccount', 'user')
             ->find($id);
 
         if (!$transaction) {
+            // Check if transaction exists but is not accessible
+            $exists = Transaction::find($id);
+            if ($exists) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'You do not have permission to view this transaction'
+                ], 403);
+            }
+
             return response()->json([
                 'success' => false,
                 'message' => 'Transaction not found'
@@ -228,9 +263,19 @@ class ApiTransactionController extends Controller
     public function update(Request $request, string $id)
     {
         try {
+            // Ensure user can only edit THEIR OWN transaction, not group member's
             $transaction = Transaction::where('user_id', Auth::id())->find($id);
 
             if (!$transaction) {
+                // Check if transaction exists but belongs to someone else (for better error message or just 404)
+                $exists = Transaction::find($id);
+                if ($exists) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'You do not have permission to edit this transaction'
+                    ], 403);
+                }
+
                 return response()->json([
                     'success' => false,
                     'message' => 'Transaction not found'
@@ -286,9 +331,19 @@ class ApiTransactionController extends Controller
     public function destroy(string $id)
     {
         try {
+            // Ensure user can only delete THEIR OWN transaction
             $transaction = Transaction::where('user_id', Auth::id())->find($id);
 
             if (!$transaction) {
+                // Check if transaction exists but belongs to someone else
+                $exists = Transaction::find($id);
+                if ($exists) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'You do not have permission to delete this transaction'
+                    ], 403);
+                }
+
                 return response()->json([
                     'success' => false,
                     'message' => 'Transaction not found'
@@ -412,13 +467,19 @@ class ApiTransactionController extends Controller
             $user = Auth::user();
             $now = now(); // Gunakan waktu server/aplikasi yang sudah diset timezone-nya
 
+            // Group Logic: Determine target user IDs (Single or Group)
+            $targetUserIds = [$user->id];
+            if ($user->group_id) {
+                $targetUserIds = \App\Models\User::where('group_id', $user->group_id)->pluck('id')->toArray();
+            }
+
             // Total Balance: Exclude Paylater accounts
-            $totalBalance = Account::where('user_id', $user->id)
+            $totalBalance = Account::whereIn('user_id', $targetUserIds)
                 ->where('type', '!=', 'paylater')
                 ->sum('balance');
 
             // Monthly Income: Exclude income transactions related to Paylater accounts
-            $monthlyIncome = Transaction::where('user_id', $user->id)
+            $monthlyIncome = Transaction::whereIn('user_id', $targetUserIds)
                 ->where('type', 'income')
                 ->whereHas('account', function($q) {
                     $q->where('type', '!=', 'paylater');
@@ -428,14 +489,14 @@ class ApiTransactionController extends Controller
                 ->sum('amount');
 
             // Monthly Expense: Include Paylater expenses (because it is consumption)
-            $monthlyExpense = Transaction::where('user_id', $user->id)
+            $monthlyExpense = Transaction::whereIn('user_id', $targetUserIds)
                 ->where('type', 'expense')
                 ->whereMonth('date', $now->month)
                 ->whereYear('date', $now->year)
                 ->sum('amount');
 
-            $recentTransactions = Transaction::where('user_id', $user->id)
-                ->with('category', 'account')
+            $recentTransactions = Transaction::whereIn('user_id', $targetUserIds)
+                ->with('category', 'account', 'user')
                 ->orderBy('date', 'desc')
                 ->orderBy('created_at', 'desc')
                 ->limit(5)

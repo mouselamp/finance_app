@@ -92,7 +92,7 @@ async function loadAccounts() {
         document.getElementById('accountGrid').classList.add('hidden');
 
         const response = await axios.get('{{ route("api.accounts.index") }}');
-        
+
         console.log('API Response:', response.data); // Debug log
 
         // Handle response structure
@@ -143,6 +143,9 @@ function displayAccounts(accounts) {
                     <div class="ml-5">
                         <h3 class="text-lg font-medium text-gray-900">${account.name}</h3>
                         <p class="text-sm text-gray-500">${account.type_label}</p>
+                        <p class="text-xs text-gray-400">
+                            <i class="fas fa-user mr-1"></i>${account.user_name}
+                        </p>
                     </div>
                 </div>
                 <div class="mt-4">
@@ -158,9 +161,15 @@ function displayAccounts(accounts) {
                     <a href="{{ route('accounts.index') }}/${account.id}" class="flex-1 text-center bg-blue-50 text-blue-600 px-3 py-2 rounded-md text-sm font-medium hover:bg-blue-100">
                         <i class="fas fa-eye mr-1"></i> Detail
                     </a>
-                    <a href="{{ route('accounts.index') }}/${account.id}/edit" class="flex-1 text-center bg-green-50 text-green-600 px-3 py-2 rounded-md text-sm font-medium hover:bg-green-100">
-                        <i class="fas fa-edit mr-1"></i> Edit
-                    </a>
+                    ${account.is_owner ? `
+                        <a href="{{ route('accounts.index') }}/${account.id}/edit" class="flex-1 text-center bg-green-50 text-green-600 px-3 py-2 rounded-md text-sm font-medium hover:bg-green-100">
+                            <i class="fas fa-edit mr-1"></i> Edit
+                        </a>
+                    ` : `
+                        <div class="flex-1 text-center bg-gray-100 text-gray-400 px-3 py-2 rounded-md text-sm font-medium cursor-not-allowed">
+                            <i class="fas fa-lock mr-1"></i> Read Only
+                        </div>
+                    `}
                 </div>
             </div>
         `;

@@ -58,4 +58,12 @@ Route::middleware('auth.token')->group(function () {
     // Api Routes for Reports
     Route::get('/reports', [App\Http\Controllers\Api\ApiReportController::class, 'index'])->name('api.reports.index');
     Route::get('/reports/details', [App\Http\Controllers\Api\ApiReportController::class, 'details'])->name('api.reports.details');
+
+    // Api Routes for Groups
+    Route::prefix('groups')->group(function () {
+        Route::get('/', [App\Http\Controllers\Api\ApiGroupController::class, 'info'])->name('api.groups.info');
+        Route::post('/', [App\Http\Controllers\Api\ApiGroupController::class, 'create'])->name('api.groups.create');
+        Route::post('/join', [App\Http\Controllers\Api\ApiGroupController::class, 'join'])->name('api.groups.join');
+        Route::post('/leave', [App\Http\Controllers\Api\ApiGroupController::class, 'leave'])->name('api.groups.leave');
+    });
 });

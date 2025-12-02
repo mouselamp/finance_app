@@ -141,6 +141,7 @@
             <div class="px-6 py-4 bg-gray-50 border-t border-gray-200">
                 <div class="flex items-center justify-between">
                     <div class="flex items-center gap-3">
+                        @if($transaction->user_id === auth()->id())
                         <a href="{{ route('transactions.edit', $transaction->id) }}"
                            class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors duration-200">
                             <i class="fas fa-edit mr-2"></i>
@@ -157,6 +158,11 @@
                                 Hapus
                             </button>
                         </form>
+                        @else
+                        <span class="text-sm text-gray-500 italic">
+                            <i class="fas fa-lock mr-1"></i> Transaksi milik {{ $transaction->user->name ?? 'Anggota Grup' }}
+                        </span>
+                        @endif
                     </div>
 
                     <a href="{{ route('transactions.index') }}"

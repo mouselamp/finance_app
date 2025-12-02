@@ -23,6 +23,7 @@ class User extends Authenticatable
         'email',
         'password',
         'api_token',
+        'group_id',
     ];
 
     /**
@@ -45,6 +46,14 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
     ];
+
+    /**
+     * Get the group that the user belongs to.
+     */
+    public function group()
+    {
+        return $this->belongsTo(Group::class);
+    }
 
     /**
      * Generate API token for the user

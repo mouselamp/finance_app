@@ -373,7 +373,10 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('transactionCount').textContent = transactions.total;
 
         // Create transaction items with modern design
+        const currentUserId = {{ Auth::id() }};
+
         transactions.data.forEach(transaction => {
+            const isOwner = transaction.user_id === currentUserId;
             const div = document.createElement('div');
             div.className = 'p-4 sm:p-6 hover:bg-gray-50 transition-colors duration-150 border-l-4 ' +
                           (transaction.type === 'income' ? 'border-green-500 hover:bg-green-50' :
@@ -432,6 +435,10 @@ document.addEventListener('DOMContentLoaded', function() {
                                     <i class="fas fa-calendar text-xs"></i>
                                     <span>${formatDate(transaction.date)}</span>
                                 </div>
+                                <div class="flex items-center gap-1">
+                                    <i class="fas fa-user text-xs"></i>
+                                    <span class="${isOwner ? 'font-medium text-blue-600' : 'text-gray-600'}">${transaction.user?.name || 'Unknown'}</span>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -456,6 +463,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                title="Lihat Detail">
                                 <i class="fas fa-eye text-sm"></i>
                             </a>
+                            ${isOwner ? `
                             <a href="{{ route('transactions.index') }}/${transaction.id}/edit"
                                class="p-2 text-gray-600 hover:bg-gray-50 rounded-lg transition-colors duration-150"
                                title="Edit">
@@ -466,6 +474,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                     title="Hapus">
                                 <i class="fas fa-trash text-sm"></i>
                             </button>
+                            ` : ''}
                         </div>
                     </div>
                 </div>

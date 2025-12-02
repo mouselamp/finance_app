@@ -1,5 +1,6 @@
 import './bootstrap';
 import './utils';
+import './api';
 
 // Import Alpine.js
 import Alpine from 'alpinejs';

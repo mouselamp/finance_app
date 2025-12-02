@@ -23,6 +23,12 @@ class ApiReportController extends Controller
             $period = $request->query('period', 'this_month');
             $now = now();
 
+            // Group Logic: Determine target user IDs (Single or Group)
+            $targetUserIds = [$user->id];
+            if ($user->group_id) {
+                $targetUserIds = \App\Models\User::where('group_id', $user->group_id)->pluck('id')->toArray();
+            }
+
             // Determine date range
             switch ($period) {
                 case 'last_month':
@@ -45,7 +51,7 @@ class ApiReportController extends Controller
             }
 
             // Base query
-            $query = Transaction::where('user_id', $user->id)
+            $query = Transaction::whereIn('user_id', $targetUserIds)
                 ->whereBetween('date', [$startDate, $endDate]);
 
             // 1. Summary Stats
@@ -56,10 +62,10 @@ class ApiReportController extends Controller
             $summary['net_balance'] = $summary['total_income'] - $summary['total_expense'];
 
             // 2. Trend Chart (Income vs Expense per time unit)
-            $trend = $this->getTrendData($user->id, $period, $startDate, $endDate);
+            $trend = $this->getTrendData($targetUserIds, $period, $startDate, $endDate);
 
             // 3. Category Distribution (Expense only)
-            $distribution = Transaction::where('user_id', $user->id)
+            $distribution = Transaction::whereIn('user_id', $targetUserIds)
                 ->where('type', 'expense')
                 ->whereBetween('date', [$startDate, $endDate])
                 ->select('category_id', DB::raw('SUM(amount) as total'))
@@ -76,7 +82,7 @@ class ApiReportController extends Controller
                 });
 
             // 4. Detailed Table Data (Grouped by Category)
-            $details = Transaction::where('user_id', $user->id)
+            $details = Transaction::whereIn('user_id', $targetUserIds)
                 ->whereBetween('date', [$startDate, $endDate])
                 ->whereIn('type', ['income', 'expense'])
                 ->select(
@@ -121,8 +127,13 @@ class ApiReportController extends Controller
         }
     }
 
-    private function getTrendData($userId, $period, $startDate, $endDate)
+    private function getTrendData($userIds, $period, $startDate, $endDate)
     {
+        // Ensure userIds is array
+        if (!is_array($userIds)) {
+            $userIds = [$userIds];
+        }
+
         // For year view, group by month. For others, group by day.
         $groupBy = $period === 'this_year' ? 'month' : 'day';
         // PostgreSQL format: YYYY-MM for month, YYYY-MM-DD for day
@@ -132,14 +143,14 @@ class ApiReportController extends Controller
         // PostgreSQL specific date formatting
         $rawDate = "TO_CHAR(date, '$dateFormat')";
 
-        $incomes = Transaction::where('user_id', $userId)
+        $incomes = Transaction::whereIn('user_id', $userIds)
             ->where('type', 'income')
             ->whereBetween('date', [$startDate, $endDate])
             ->select(DB::raw("$rawDate as date_group"), DB::raw('SUM(amount) as total'))
             ->groupBy('date_group')
             ->pluck('total', 'date_group');
 
-        $expenses = Transaction::where('user_id', $userId)
+        $expenses = Transaction::whereIn('user_id', $userIds)
             ->where('type', 'expense')
             ->whereBetween('date', [$startDate, $endDate])
             ->select(DB::raw("$rawDate as date_group"), DB::raw('SUM(amount) as total'))

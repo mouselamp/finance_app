@@ -21,24 +21,43 @@ class ApiAccountController extends Controller
     public function index()
     {
         try {
-            $accounts = Account::where('user_id', Auth::id())->get();
+            $user = Auth::user();
+            
+            // Get accounts from current user and group members
+            if ($user->group) {
+                // Get all user IDs in the group
+                $groupUserIds = $user->group->users()->pluck('users.id');
+                
+                // Get accounts from all group members
+                $accounts = Account::whereIn('user_id', $groupUserIds)
+                    ->with('user') // Load user relationship
+                    ->get();
+            } else {
+                // Only current user's accounts
+                $accounts = Account::where('user_id', Auth::id())
+                    ->with('user')
+                    ->get();
+            }
 
-            // Add type_label to each account
+            // Add type_label and owner info to each account
             $accountsData = $accounts->map(function ($account) {
                 return [
                     'id' => $account->id,
                     'user_id' => $account->user_id,
+                    'user_name' => $account->user ? $account->user->name : 'Unknown',
                     'name' => $account->name,
                     'type' => $account->type,
                     'type_label' => $account->type_label,
                     'balance' => $account->balance,
                     'note' => $account->note,
+                    'is_owner' => $account->user_id === Auth::id(),
                     'created_at' => $account->created_at,
                     'updated_at' => $account->updated_at,
                 ];
             });
 
-            $totalBalance = $accounts->sum('balance');
+            // Only calculate total balance for current user's accounts
+            $totalBalance = $accounts->where('user_id', Auth::id())->sum('balance');
 
             return response()->json([
                 'success' => true,
@@ -106,7 +125,8 @@ class ApiAccountController extends Controller
     public function show(string $id)
     {
         try {
-            $account = Account::where('user_id', Auth::id())->find($id);
+            $user = Auth::user();
+            $account = Account::with('user')->find($id);
 
             if (!$account) {
                 return response()->json([
@@ -115,12 +135,29 @@ class ApiAccountController extends Controller
                 ], 404);
             }
 
-            $transactions = Transaction::where('user_id', Auth::id())
+            // Check if user can access this account (own account or group member)
+            $isOwner = $account->user_id === Auth::id();
+            $canAccess = $isOwner;
+            
+            if (!$isOwner && $user->group) {
+                // Check if account owner is in the same group
+                $canAccess = $user->group->users()->where('users.id', $account->user_id)->exists();
+            }
+
+            if (!$canAccess) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Account not found'
+                ], 404);
+            }
+
+            // Get transactions for this account (only from account owner's transactions)
+            $transactions = Transaction::where('user_id', $account->user_id)
                 ->where(function($query) use ($account) {
                     $query->where('account_id', $account->id)
                           ->orWhere('related_account_id', $account->id);
                 })
-                ->with('category', 'relatedAccount')
+                ->with('category', 'relatedAccount', 'user')
                 ->orderBy('date', 'desc')
                 ->orderBy('created_at', 'desc')
                 ->paginate(20);
@@ -129,7 +166,8 @@ class ApiAccountController extends Controller
                 'success' => true,
                 'data' => [
                     'account' => $account,
-                    'transactions' => $transactions
+                    'transactions' => $transactions,
+                    'is_owner' => $isOwner
                 ],
                 'message' => 'Account details retrieved successfully'
             ]);

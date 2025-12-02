@@ -66,5 +66,8 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/receipts', [ReceiptController::class, 'index'])->name('receipts.index');
     Route::post('/receipts/analyze', [ReceiptController::class, 'analyze'])->name('receipts.analyze');
     Route::post('/receipts/{receipt}/save', [ReceiptController::class, 'storeTransaction'])->name('receipts.save');
+
+    // Groups
+    Route::get('/groups', [App\Http\Controllers\GroupController::class, 'index'])->name('groups.index');
 });
 
