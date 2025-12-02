@@ -94,19 +94,6 @@
                 <div id="typeError" class="hidden mt-1 text-sm text-red-600"></div>
             </div>
 
-            <!-- Catatan (Opsional) -->
-            <div>
-                <label for="note" class="block text-sm font-medium text-gray-700 mb-2">
-                    Catatan <span class="text-gray-400">(Opsional)</span>
-                </label>
-                <textarea id="note"
-                          name="note"
-                          rows="3"
-                          class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                          placeholder="Tambahkan catatan atau deskripsi untuk kategori ini..."></textarea>
-                <p class="mt-1 text-sm text-gray-500">Deskripsi tambahan untuk kategori ini</p>
-            </div>
-
             <!-- Category Info -->
             <div class="bg-gray-50 rounded-lg p-4">
                 <h4 class="text-sm font-medium text-gray-700 mb-2">Informasi Kategori</h4>
@@ -135,7 +122,7 @@
                             id="submitBtn"
                             class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors flex items-center">
                         <span id="submitText">Simpan Perubahan</span>
-                        <i id="submitLoading" class="fas fa-spinner fa-spin ml-2 hidden"></i>
+                        <i id="submitLoading" class="fas fa-spinner fa-spin ml-2" style="display: none;"></i>
                     </button>
                 </div>
             </div>
@@ -149,15 +136,8 @@
 let currentCategory = null;
 
 document.addEventListener('DOMContentLoaded', function() {
-    // Get category ID from URL
-    const urlParts = window.location.pathname.split('/');
-    const categoryId = urlParts[urlParts.length - 1];
-
-    if (categoryId && categoryId !== 'edit') {
-        loadCategory(categoryId);
-    } else {
-        showError('ID kategori tidak valid');
-    }
+    const categoryId = {{ $category->id }};
+    loadCategory(categoryId);
 
     // Setup form submission
     setupFormHandler();
@@ -184,7 +164,6 @@ async function loadCategory(categoryId) {
 function populateForm(category) {
     document.getElementById('categoryId').value = category.id;
     document.getElementById('name').value = category.name;
-    document.getElementById('note').value = category.note || '';
 
     // Set type radio button
     const radioBtn = document.querySelector(`input[name="type"][value="${category.type}"]`);
@@ -236,8 +215,7 @@ function setupFormHandler() {
         const categoryId = formData.get('id');
         const data = {
             name: formData.get('name').trim(),
-            type: formData.get('type'),
-            note: formData.get('note').trim() || null
+            type: formData.get('type')
         };
 
         // Validate
@@ -385,12 +363,12 @@ function setLoading(loading) {
         submitBtn.disabled = true;
         submitBtn.classList.add('opacity-75', 'cursor-not-allowed');
         submitText.textContent = 'Menyimpan...';
-        submitLoading.classList.remove('hidden');
+        submitLoading.style.display = 'inline';
     } else {
         submitBtn.disabled = false;
         submitBtn.classList.remove('opacity-75', 'cursor-not-allowed');
         submitText.textContent = 'Simpan Perubahan';
-        submitLoading.classList.add('hidden');
+        submitLoading.style.display = 'none';
     }
 }
 

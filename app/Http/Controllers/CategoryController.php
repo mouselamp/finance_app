@@ -46,8 +46,7 @@ class CategoryController extends Controller
         try {
             $request->validate([
                 'name' => 'required|string|max:255',
-                'type' => 'required|in:income,expense',
-                'note' => 'nullable|string|max:500'
+                'type' => 'required|in:income,expense'
             ]);
 
             // Check if category already exists for this user
@@ -65,8 +64,7 @@ class CategoryController extends Controller
             $category = Category::create([
                 'user_id' => Auth::id(),
                 'name' => $request->name,
-                'type' => $request->type,
-                'note' => $request->note
+                'type' => $request->type
             ]);
 
             return redirect()->route('categories.index')
@@ -133,8 +131,7 @@ class CategoryController extends Controller
 
             $request->validate([
                 'name' => 'required|string|max:255',
-                'type' => 'required|in:income,expense',
-                'note' => 'nullable|string|max:500'
+                'type' => 'required|in:income,expense'
             ]);
 
             // Check if another category with same name and type exists
@@ -152,8 +149,7 @@ class CategoryController extends Controller
 
             $category->update([
                 'name' => $request->name,
-                'type' => $request->type,
-                'note' => $request->note
+                'type' => $request->type
             ]);
 
             return redirect()->route('categories.index')
