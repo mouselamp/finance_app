@@ -18,13 +18,16 @@ class ApiAccountController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
         try {
             $user = Auth::user();
             
+            // If own_only=1, return only current user's accounts (for transaction create/edit)
+            $ownOnly = $request->boolean('own_only');
+            
             // Get accounts from current user and group members
-            if ($user->group) {
+            if (!$ownOnly && $user->group) {
                 // Get all user IDs in the group
                 $groupUserIds = $user->group->users()->pluck('users.id');
                 

@@ -585,10 +585,10 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-// Load accounts via API
+// Load accounts via API (own_only=1 to exclude group members' accounts)
 async function loadAccounts() {
     try {
-        const response = await axios.get('{{ route("api.accounts.index") }}');
+        const response = await axios.get('{{ route("api.accounts.index") }}?own_only=1');
         if (response.data.success) {
                 console.log('Accounts API Response:', response.data.data);
             const accountSelect = document.getElementById('account_id');
