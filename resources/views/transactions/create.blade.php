@@ -493,8 +493,17 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('transactionForm').addEventListener('submit', async function(e) {
         e.preventDefault();
 
+        // Prevent double submission using LoadingOverlay
+        if (window.LoadingOverlay.isSubmitting()) {
+            console.log('Submission blocked - already in progress');
+            return;
+        }
+
         const submitBtn = document.querySelector('button[type="submit"]');
         const originalText = submitBtn.innerHTML;
+
+        // Show loading overlay
+        window.LoadingOverlay.show('Menyimpan transaksi...');
 
         try {
             submitBtn.disabled = true;
@@ -554,6 +563,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         } catch (error) {
             handleApiError(error, 'Menyimpan transaksi');
+            window.LoadingOverlay.hide(); // Hide overlay on error to allow retry
         } finally {
             submitBtn.disabled = false;
             submitBtn.innerHTML = originalText;
@@ -566,14 +576,14 @@ document.addEventListener('DOMContentLoaded', function() {
     amountInput.addEventListener('input', function(e) {
         // Remove non-digit characters
         let value = this.value.replace(/\D/g, '');
-        
+
         // Convert to number and format
         if (value !== '') {
             this.value = new Intl.NumberFormat('id-ID').format(value);
         } else {
             this.value = '';
         }
-        
+
         // Update calculation if paylater installment is active
         updateInstallmentCalculation();
     });

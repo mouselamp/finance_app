@@ -6,6 +6,12 @@ use Illuminate\Http\Request;
 use App\Models\Account;
 use App\Models\Transaction;
 
+/**
+ * AccountController - Web Controller
+ *
+ * This controller only handles VIEW RENDERING.
+ * All CRUD operations (store, update, destroy) are handled by ApiAccountController.
+ */
 class AccountController extends Controller
 {
     public function __construct()
@@ -13,65 +19,65 @@ class AccountController extends Controller
         $this->middleware('auth');
     }
 
+    /**
+     * Display a listing of accounts.
+     */
     public function index()
     {
         $user = auth()->user();
-
         $accounts = Account::where('user_id', $user->id)->get();
-
         $totalBalance = $accounts->sum('balance');
 
         return view('accounts.index', compact('accounts', 'totalBalance'));
     }
 
+    /**
+     * Show the form for creating a new account.
+     */
     public function create()
     {
         $accountTypes = (new Account())->getAccountTypes();
         return view('accounts.create', compact('accountTypes'));
     }
 
-    public function store(Request $request)
-    {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'type' => 'required|in:cash,bank,paylater',
-            'balance' => 'required|numeric|min:0',
-            'note' => 'nullable|string'
-        ]);
-
-        $user = auth()->user();
-
-        $account = Account::create([
-            'user_id' => $user->id,
-            'name' => $request->name,
-            'type' => $request->type,
-            'balance' => $request->balance,
-            'note' => $request->note
-        ]);
-
-        return redirect()->route('accounts.index')
-            ->with('success', 'Akun berhasil ditambahkan!');
-    }
-
+    /**
+     * Display the specified account.
+     * Allows group members to view accounts in read-only mode.
+     */
     public function show(Account $account)
     {
-        if ($account->user_id !== auth()->id()) {
-            abort(403);
+        $user = auth()->user();
+        $isOwner = $account->user_id === $user->id;
+        $canAccess = $isOwner;
+
+        // Check if user can access via group membership
+        if (!$isOwner && $user->group_id) {
+            $canAccess = \App\Models\User::where('group_id', $user->group_id)
+                ->where('id', $account->user_id)
+                ->exists();
         }
 
-        $transactions = Transaction::where('user_id', auth()->id())
+        if (!$canAccess) {
+            abort(403, 'Anda tidak memiliki akses ke akun ini.');
+        }
+
+        // Get transactions from the account owner
+        $transactions = Transaction::where('user_id', $account->user_id)
             ->where(function($query) use ($account) {
                 $query->where('account_id', $account->id)
                       ->orWhere('related_account_id', $account->id);
             })
-            ->with('category', 'relatedAccount')
+            ->with('category', 'relatedAccount', 'user')
             ->orderBy('date', 'desc')
             ->orderBy('created_at', 'desc')
             ->paginate(20);
 
-        return view('accounts.show', compact('account', 'transactions'));
+        return view('accounts.show', compact('account', 'transactions', 'isOwner'));
     }
 
+    /**
+     * Show the form for editing the specified account.
+     */
     public function edit(Account $account)
     {
         if ($account->user_id !== auth()->id()) {
@@ -82,48 +88,6 @@ class AccountController extends Controller
         return view('accounts.edit', compact('account', 'accountTypes'));
     }
 
-    public function update(Request $request, Account $account)
-    {
-        if ($account->user_id !== auth()->id()) {
-            abort(403);
-        }
-
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'note' => 'nullable|string'
-        ]);
-
-        $account->update([
-            'name' => $request->name,
-            'note' => $request->note
-        ]);
-
-        return redirect()->route('accounts.index')
-            ->with('success', 'Akun berhasil diperbarui!');
-    }
-
-    public function destroy(Account $account)
-    {
-        if ($account->user_id !== auth()->id()) {
-            abort(403);
-        }
-
-        // Check if account has transactions
-        $transactionCount = Transaction::where('user_id', auth()->id())
-            ->where(function($query) use ($account) {
-                $query->where('account_id', $account->id)
-                      ->orWhere('related_account_id', $account->id);
-            })
-            ->count();
-
-        if ($transactionCount > 0) {
-            return redirect()->route('accounts.index')
-                ->with('error', 'Akun tidak dapat dihapus karena masih memiliki transaksi.');
-        }
-
-        $account->delete();
-
-        return redirect()->route('accounts.index')
-            ->with('success', 'Akun berhasil dihapus!');
-    }
+    // NOTE: store(), update(), destroy() methods are NOT needed here.
+    // All CRUD operations are handled via API (ApiAccountController).
 }

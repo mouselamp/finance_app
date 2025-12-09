@@ -159,6 +159,22 @@
         </div>
     </div>
 
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="fixed inset-0 bg-gray-900 bg-opacity-50 z-[9999] hidden flex items-center justify-center backdrop-blur-sm transition-opacity duration-200">
+        <div class="bg-white rounded-xl shadow-2xl p-8 flex flex-col items-center space-y-4 max-w-sm mx-4">
+            <div class="relative">
+                <div class="w-16 h-16 border-4 border-blue-200 rounded-full animate-spin border-t-blue-600"></div>
+                <div class="absolute inset-0 flex items-center justify-center">
+                    <i class="fas fa-wallet text-blue-600 text-lg"></i>
+                </div>
+            </div>
+            <div class="text-center">
+                <p id="loadingMessage" class="text-gray-700 font-medium">Menyimpan data...</p>
+                <p class="text-gray-500 text-sm mt-1">Mohon tunggu sebentar</p>
+            </div>
+        </div>
+    </div>
+
     <!-- PWA Install Prompt -->
     <div id="pwaInstallPrompt" class="pwa-install-prompt">
         <i class="fas fa-download"></i>
@@ -169,6 +185,62 @@
 
     <!-- Alpine.js Event Listener for Sidebar Toggle -->
     <script>
+        // Global Loading Overlay Utility
+        window.LoadingOverlay = {
+            _isSubmitting: false,
+
+            show: function(message = 'Menyimpan data...') {
+                if (this._isSubmitting) return false; // Prevent double action
+                this._isSubmitting = true;
+
+                const overlay = document.getElementById('loadingOverlay');
+                const messageEl = document.getElementById('loadingMessage');
+
+                if (overlay && messageEl) {
+                    messageEl.textContent = message;
+                    overlay.classList.remove('hidden');
+                    overlay.classList.add('flex');
+
+                    // Prevent scrolling
+                    document.body.style.overflow = 'hidden';
+                }
+                return true;
+            },
+
+            hide: function() {
+                this._isSubmitting = false;
+
+                const overlay = document.getElementById('loadingOverlay');
+                if (overlay) {
+                    overlay.classList.add('hidden');
+                    overlay.classList.remove('flex');
+
+                    // Restore scrolling
+                    document.body.style.overflow = '';
+                }
+            },
+
+            isSubmitting: function() {
+                return this._isSubmitting;
+            }
+        };
+
+        // Utility to wrap async form submissions with loading overlay
+        window.submitWithLoading = async function(asyncFn, loadingMessage = 'Menyimpan data...') {
+            if (!window.LoadingOverlay.show(loadingMessage)) {
+                console.log('Submission blocked - already in progress');
+                return;
+            }
+
+            try {
+                await asyncFn();
+            } catch (error) {
+                throw error;
+            } finally {
+                // Note: We don't hide overlay here as page usually redirects on success
+                // If you need to hide on error, call LoadingOverlay.hide() in your catch block
+            }
+        };
         // Setup axios default headers with API token
         document.addEventListener('DOMContentLoaded', function() {
             const apiToken = document.querySelector('meta[name="api-token"]');

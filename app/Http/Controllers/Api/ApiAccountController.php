@@ -22,15 +22,15 @@ class ApiAccountController extends Controller
     {
         try {
             $user = Auth::user();
-            
+
             // If own_only=1, return only current user's accounts (for transaction create/edit)
             $ownOnly = $request->boolean('own_only');
-            
+
             // Get accounts from current user and group members
             if (!$ownOnly && $user->group) {
                 // Get all user IDs in the group
                 $groupUserIds = $user->group->users()->pluck('users.id');
-                
+
                 // Get accounts from all group members
                 $accounts = Account::whereIn('user_id', $groupUserIds)
                     ->with('user') // Load user relationship
@@ -93,13 +93,34 @@ class ApiAccountController extends Controller
                 'note' => 'nullable|string'
             ]);
 
-            $account = Account::create([
-                'user_id' => Auth::id(),
-                'name' => $request->name,
-                'type' => $request->type,
-                'balance' => $request->balance,
-                'note' => $request->note
-            ]);
+            $account = \DB::transaction(function () use ($request) {
+                // Create account with zero balance first
+                $account = Account::create([
+                    'user_id' => Auth::id(),
+                    'name' => $request->name,
+                    'type' => $request->type,
+                    'balance' => 0, // Start with zero
+                    'note' => $request->note
+                ]);
+
+                // If initial balance > 0, create initial balance transaction
+                if ($request->balance > 0) {
+                    Transaction::create([
+                        'user_id' => Auth::id(),
+                        'account_id' => $account->id,
+                        'category_id' => null,
+                        'type' => 'income',
+                        'date' => now()->format('Y-m-d'),
+                        'amount' => $request->balance,
+                        'note' => '[SALDO AWAL] ' . $request->name
+                    ]);
+
+                    // Update account balance
+                    $account->updateBalance($request->balance, 'add');
+                }
+
+                return $account;
+            });
 
             return response()->json([
                 'success' => true,
@@ -114,6 +135,12 @@ class ApiAccountController extends Controller
                 'errors' => $e->errors()
             ], 422);
         } catch (\Exception $e) {
+            \Log::error('API Account Store Error: ' . $e->getMessage(), [
+                'user_id' => Auth::id(),
+                'request_data' => $request->except(['_token']),
+                'trace' => $e->getTraceAsString()
+            ]);
+
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to create account: ' . $e->getMessage(),
@@ -141,7 +168,7 @@ class ApiAccountController extends Controller
             // Check if user can access this account (own account or group member)
             $isOwner = $account->user_id === Auth::id();
             $canAccess = $isOwner;
-            
+
             if (!$isOwner && $user->group) {
                 // Check if account owner is in the same group
                 $canAccess = $user->group->users()->where('users.id', $account->user_id)->exists();

@@ -87,7 +87,7 @@ class ApiTransactionController extends Controller
 
         // Calculate Summary Stats based on FILTERED data
         // Note: We apply the same Paylater exclusion logic here
-        
+
         // 1. Total Income (Filtered) - Exclude Paylater Income
         $totalIncome = (clone $summaryQuery)
             ->where('type', 'income')
@@ -100,7 +100,7 @@ class ApiTransactionController extends Controller
         $totalExpense = (clone $summaryQuery)
             ->where('type', 'expense')
             ->sum('amount');
-            
+
         // 3. Net Balance
         $netBalance = $totalIncome - $totalExpense;
 
@@ -156,42 +156,49 @@ class ApiTransactionController extends Controller
                 }
             }
 
-            $data = $request->all();
-            $data['user_id'] = Auth::id();
-
-            // Handle empty category_id
-            if (empty($data['category_id'])) {
-                $data['category_id'] = null;
-            }
-
-            // Handle paylater transactions
+            // Handle paylater transactions (already has its own DB::transaction)
             if ($account && $account->type === 'paylater' && $request->type === 'expense') {
                 return $this->createPaylaterTransaction($request, Auth::user());
             }
 
-            // Handle transfer transactions
-            if ($request->type === 'transfer') {
-                $data['related_account_id'] = $request->related_account_id;
-                $transaction = Transaction::create($data);
+            // Wrap in DB::transaction for atomic operations
+            $transaction = \DB::transaction(function () use ($request, $account) {
+                $data = $request->all();
+                $data['user_id'] = Auth::id();
 
-                // Update balances for transfer
-                $fromAccount = Account::find($request->account_id);
-                $toAccount = Account::find($request->related_account_id);
+                // Handle empty category_id
+                if (empty($data['category_id'])) {
+                    $data['category_id'] = null;
+                }
 
-                $fromAccount->updateBalance($request->amount, 'subtract');
-                $toAccount->updateBalance($request->amount, 'add');
-            } else {
+                // Handle transfer transactions
+                if ($request->type === 'transfer') {
+                    $data['related_account_id'] = $request->related_account_id;
+                    $transaction = Transaction::create($data);
+
+                    // Update balances for transfer
+                    $fromAccount = Account::find($request->account_id);
+                    $toAccount = Account::find($request->related_account_id);
+
+                    $fromAccount->updateBalance($request->amount, 'subtract');
+                    $toAccount->updateBalance($request->amount, 'add');
+
+                    return $transaction;
+                }
+
                 // Regular income/expense transaction
                 $transaction = Transaction::create($data);
 
                 // Update account balance
-                $account = Account::find($request->account_id);
+                $acc = Account::find($request->account_id);
                 if ($request->type === 'income') {
-                    $account->updateBalance($request->amount, 'add');
+                    $acc->updateBalance($request->amount, 'add');
                 } elseif ($request->type === 'expense') {
-                    $account->updateBalance($request->amount, 'subtract');
+                    $acc->updateBalance($request->amount, 'subtract');
                 }
-            }
+
+                return $transaction;
+            });
 
             // Load relationships for response
             $transaction->load('category', 'account', 'relatedAccount');
@@ -209,6 +216,12 @@ class ApiTransactionController extends Controller
                 'errors' => $e->errors()
             ], 422);
         } catch (\Exception $e) {
+            \Log::error('API Transaction Store Error: ' . $e->getMessage(), [
+                'user_id' => Auth::id(),
+                'request_data' => $request->except(['_token']),
+                'trace' => $e->getTraceAsString()
+            ]);
+
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to create transaction: ' . $e->getMessage(),
@@ -223,7 +236,7 @@ class ApiTransactionController extends Controller
     public function show(string $id)
     {
         $user = Auth::user();
-        
+
         // Determine allowed user IDs (Self + Group Members)
         $allowedUserIds = [$user->id];
         if ($user->group_id) {
@@ -292,21 +305,65 @@ class ApiTransactionController extends Controller
                 'related_account_id' => 'required_if:type,transfer|exists:accounts,id,user_id,' . Auth::id() . '|different:account_id'
             ]);
 
-            $data = $request->all();
+            // Wrap in DB::transaction for atomic operations
+            $updatedTransaction = \DB::transaction(function () use ($request, $transaction) {
+                // Store old values for balance recalculation
+                $oldType = $transaction->type;
+                $oldAmount = $transaction->amount;
+                $oldAccountId = $transaction->account_id;
+                $oldRelatedAccountId = $transaction->related_account_id;
 
-            // Handle empty category_id
-            if (empty($data['category_id'])) {
-                $data['category_id'] = null;
-            }
+                $data = $request->all();
 
-            $transaction->update($data);
+                // Handle empty category_id
+                if (empty($data['category_id'])) {
+                    $data['category_id'] = null;
+                }
+
+                // Revert old balance first
+                $oldAccount = Account::find($oldAccountId);
+                if ($oldAccount) {
+                    if ($oldType === 'income') {
+                        $oldAccount->updateBalance($oldAmount, 'subtract');
+                    } elseif ($oldType === 'expense') {
+                        $oldAccount->updateBalance($oldAmount, 'add');
+                    } elseif ($oldType === 'transfer' && $oldRelatedAccountId) {
+                        $oldAccount->updateBalance($oldAmount, 'add'); // Revert subtract from source
+                        $oldRelatedAccount = Account::find($oldRelatedAccountId);
+                        if ($oldRelatedAccount) {
+                            $oldRelatedAccount->updateBalance($oldAmount, 'subtract'); // Revert add to destination
+                        }
+                    }
+                }
+
+                // Update transaction
+                $transaction->update($data);
+
+                // Apply new balance
+                $newAccount = Account::find($request->account_id);
+                if ($newAccount) {
+                    if ($request->type === 'income') {
+                        $newAccount->updateBalance($request->amount, 'add');
+                    } elseif ($request->type === 'expense') {
+                        $newAccount->updateBalance($request->amount, 'subtract');
+                    } elseif ($request->type === 'transfer' && $request->related_account_id) {
+                        $newAccount->updateBalance($request->amount, 'subtract');
+                        $newRelatedAccount = Account::find($request->related_account_id);
+                        if ($newRelatedAccount) {
+                            $newRelatedAccount->updateBalance($request->amount, 'add');
+                        }
+                    }
+                }
+
+                return $transaction;
+            });
 
             // Load relationships for response
-            $transaction->load('category', 'account', 'relatedAccount');
+            $updatedTransaction->load('category', 'account', 'relatedAccount');
 
             return response()->json([
                 'success' => true,
-                'data' => $transaction,
+                'data' => $updatedTransaction,
                 'message' => 'Transaction updated successfully'
             ]);
 
@@ -317,6 +374,13 @@ class ApiTransactionController extends Controller
                 'errors' => $e->errors()
             ], 422);
         } catch (\Exception $e) {
+            \Log::error('API Transaction Update Error: ' . $e->getMessage(), [
+                'user_id' => Auth::id(),
+                'transaction_id' => $id,
+                'request_data' => $request->except(['_token']),
+                'trace' => $e->getTraceAsString()
+            ]);
+
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to update transaction: ' . $e->getMessage(),
@@ -350,17 +414,26 @@ class ApiTransactionController extends Controller
                 ], 404);
             }
 
-            // Restore account balance before deletion
-            $account = Account::find($transaction->account_id);
-            if ($account) {
-                if ($transaction->type === 'income') {
-                    $account->updateBalance($transaction->amount, 'subtract');
-                } elseif ($transaction->type === 'expense') {
-                    $account->updateBalance($transaction->amount, 'add');
+            // Wrap in DB::transaction for atomic operations
+            \DB::transaction(function () use ($transaction) {
+                // Restore account balance before deletion
+                $account = Account::find($transaction->account_id);
+                if ($account) {
+                    if ($transaction->type === 'income') {
+                        $account->updateBalance($transaction->amount, 'subtract');
+                    } elseif ($transaction->type === 'expense') {
+                        $account->updateBalance($transaction->amount, 'add');
+                    } elseif ($transaction->type === 'transfer' && $transaction->related_account_id) {
+                        $account->updateBalance($transaction->amount, 'add'); // Revert subtract from source
+                        $relatedAccount = Account::find($transaction->related_account_id);
+                        if ($relatedAccount) {
+                            $relatedAccount->updateBalance($transaction->amount, 'subtract'); // Revert add to destination
+                        }
+                    }
                 }
-            }
 
-            $transaction->delete();
+                $transaction->delete();
+            });
 
             return response()->json([
                 'success' => true,
@@ -368,6 +441,12 @@ class ApiTransactionController extends Controller
             ]);
 
         } catch (\Exception $e) {
+            \Log::error('API Transaction Delete Error: ' . $e->getMessage(), [
+                'user_id' => Auth::id(),
+                'transaction_id' => $id,
+                'trace' => $e->getTraceAsString()
+            ]);
+
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to delete transaction: ' . $e->getMessage(),

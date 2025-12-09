@@ -30,7 +30,7 @@
     <form id="transactionForm" action="{{ route('transactions.update', $transaction->id) }}" method="POST">
         @csrf
         @method('PUT')
-        
+
         <div class="px-4 py-5 sm:p-6">
             <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
                 <!-- Transaction Type -->
@@ -189,7 +189,7 @@
 
         <div class="px-4 py-3 bg-gray-50 text-right sm:px-6 sm:flex sm:justify-between">
             <div class="flex items-center">
-                 <button type="button" onclick="deleteTransaction()" 
+                 <button type="button" onclick="deleteTransaction()"
                         class="text-red-600 hover:text-red-900 text-sm font-medium focus:outline-none">
                     <i class="fas fa-trash-alt mr-1"></i> Hapus Transaksi
                 </button>
@@ -206,7 +206,7 @@
             </div>
         </div>
     </form>
-    
+
     <!-- Delete Form -->
     <form id="deleteForm" action="{{ route('transactions.destroy', $transaction->id) }}" method="POST" class="hidden">
         @csrf
@@ -304,13 +304,22 @@ document.addEventListener('DOMContentLoaded', function() {
     // Handle form submission
     document.getElementById('transactionForm').addEventListener('submit', async function(e) {
         e.preventDefault();
-        
+
         if (!confirm('Apakah Anda yakin ingin menyimpan perubahan transaksi ini?')) {
+            return;
+        }
+
+        // Prevent double submission using LoadingOverlay
+        if (window.LoadingOverlay.isSubmitting()) {
+            console.log('Submission blocked - already in progress');
             return;
         }
 
         const submitBtn = document.querySelector('button[type="submit"]');
         const originalText = submitBtn.innerHTML;
+
+        // Show loading overlay
+        window.LoadingOverlay.show('Memperbarui transaksi...');
 
         try {
             submitBtn.disabled = true;
@@ -322,7 +331,7 @@ document.addEventListener('DOMContentLoaded', function() {
             // Clean data
             if (!data.category_id || data.category_id === '') delete data.category_id;
             if (data.type !== 'transfer') delete data.related_account_id;
-            
+
             // Convert amount to number (clean formatted string)
             data.amount = getRawAmount();
 
@@ -336,6 +345,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         } catch (error) {
             handleApiError(error, 'Memperbarui transaksi');
+            window.LoadingOverlay.hide(); // Hide overlay on error to allow retry
         } finally {
             submitBtn.disabled = false;
             submitBtn.innerHTML = originalText;
@@ -348,7 +358,7 @@ document.addEventListener('DOMContentLoaded', function() {
     amountInput.addEventListener('input', function(e) {
         // Remove non-digit characters
         let value = this.value.replace(/\D/g, '');
-        
+
         // Convert to number and format
         if (value !== '') {
             this.value = new Intl.NumberFormat('id-ID').format(value);
@@ -375,7 +385,7 @@ async function loadCategories(type = null, selectedId = null) {
         const response = await axios.get(url);
         if (response.data.success) {
             const categorySelect = document.getElementById('category_id');
-            
+
             // Preserve current selection if reloading same type
             const currentSelection = selectedId || categorySelect.value;
 
